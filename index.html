@@ -768,6 +768,7 @@ function startTimerTick() {
       if (secs >= HALF) {
         el.textContent = fmtSecs(HALF);
         m.halfBreak = true;
+        playWhistleSound(2);
         save();
         renderLive();
         return;
@@ -860,6 +861,7 @@ function finishMatchAuto(id) {
   m.pausedAt = null;
   stopTimerTick();
   releaseWakeLock();
+  playWhistleSound(3);
   save();
   renderLive();
   updateLiveBadge();
@@ -1395,13 +1397,19 @@ function renderClassifica() {
 // ════════════════════════════════════════
 // SCORERS
 // ════════════════════════════════════════
+function normalizeName(n) {
+  if (!n || !n.trim()) return '\x00anonimo';
+  return n.trim().toLowerCase().split(/\s+/).sort().join(' ');
+}
+
 function renderScorers() {
   const el = document.getElementById('scorers-body');
   const map = {};
   S.matches.forEach(m => {
     (m.scorers || []).forEach(sc => {
-      const key = (sc.n || 'Anonimo') + '|||' + sc.t;
+      const key = normalizeName(sc.n) + '|||' + (sc.t || '');
       if (!map[key]) map[key] = { name: sc.n || 'Anonimo', team: sc.t, goals: 0 };
+      else if ((sc.n || '').length > map[key].name.length) map[key].name = sc.n;
       map[key].goals++;
     });
   });
@@ -1669,7 +1677,9 @@ function undoLastGoal(id) {
 function finishMatch(id) {
   const m = S.matches.find(x => x.id === id);
   if (!m) return;
-  m.s = 'f'; save(); renderLive(); toast('Partita terminata ✓');
+  m.s = 'f';
+  stopTimerTick(); releaseWakeLock(); playWhistleSound(3);
+  save(); renderLive(); toast('Partita terminata ✓');
 }
 
 function resetMatch(id) {
@@ -1865,17 +1875,46 @@ function fmtDate(ds) {
 function playGoalSound() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [[880,0,0.15],[1100,0.13,0.15],[1320,0.27,0.22]].forEach(([freq,start,dur]) => {
+    // Fanfare esultanza: accordo ascendente stile gol
+    [
+      [392, 0.00, 0.10], // G4
+      [523, 0.09, 0.10], // C5
+      [659, 0.18, 0.10], // E5
+      [784, 0.27, 0.45], // G5 hold
+      [659, 0.74, 0.08], // E5
+      [784, 0.83, 0.55], // G5 finale
+    ].forEach(([freq, start, dur]) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
-      o.type = 'sine'; o.frequency.value = freq;
-      g.gain.setValueAtTime(0.28, ctx.currentTime + start);
+      o.type = 'square'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.16, ctx.currentTime + start);
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
       o.start(ctx.currentTime + start);
       o.stop(ctx.currentTime + start + dur + 0.05);
     });
   } catch(e) {}
-  if (navigator.vibrate) navigator.vibrate([40, 20, 80, 20, 40]);
+  if (navigator.vibrate) navigator.vibrate([60, 40, 120, 40, 200]);
+}
+
+function playWhistleSound(count) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const bDur = 0.35, gap = 0.28;
+    for (let i = 0; i < count; i++) {
+      const t = ctx.currentTime + i * (bDur + gap);
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(3200, t);
+      o.frequency.linearRampToValueAtTime(3700, t + bDur * 0.35);
+      o.frequency.linearRampToValueAtTime(2900, t + bDur);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.5, t + 0.018);
+      g.gain.setValueAtTime(0.5, t + bDur - 0.04);
+      g.gain.linearRampToValueAtTime(0, t + bDur);
+      o.start(t); o.stop(t + bDur + 0.05);
+    }
+  } catch(e) {}
 }
 
 function esc(s) {
