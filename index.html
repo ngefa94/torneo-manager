@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Refly">
 <link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
 <title>Refly</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -413,6 +414,22 @@ body{
 }
 .pause-btn:active{opacity:.5;transform:scale(.88)}
 .live2-timer.paused{opacity:.55}
+.live-badge{
+  position:absolute;top:4px;right:10px;
+  background:var(--red);color:#fff;
+  font-size:9px;font-weight:900;
+  min-width:16px;height:16px;border-radius:8px;padding:0 3px;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+.card-btn{
+  width:52px;height:48px;border-radius:8px;border:none;cursor:pointer;
+  font-size:9px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:transform .1s;box-shadow:0 2px 8px rgba(0,0,0,.3);font-family:inherit;
+}
+.card-btn:active{transform:scale(.84)}
+.card-row{display:flex;justify-content:space-between;padding:4px 20px 8px}
 .scorer-add{
   width:26px;height:26px;border-radius:50%;
   border:1.5px solid var(--border);background:rgba(255,255,255,.08);
@@ -635,6 +652,23 @@ body{
   </div>
 </div>
 
+<!-- ══════════════════════ MODAL: CARTELLINO ══════════════════════ -->
+<div class="mo" id="mo-card">
+  <div class="mo-box">
+    <div class="mo-handle"></div>
+    <h2 class="mo-title" id="card-title">🟨 Cartellino</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Squadra: <strong id="card-team-lbl"></strong></p>
+    <div class="fg">
+      <label class="fl">Giocatore <span style="color:var(--muted);text-transform:none;font-weight:400">(opz.)</span></label>
+      <input class="fi" type="text" id="card-inp" placeholder="Nome giocatore" autocomplete="off">
+    </div>
+    <div style="display:flex;gap:9px;margin-top:10px">
+      <button class="btn btn-sec" onclick="closeMo('mo-card')">Annulla</button>
+      <button class="btn btn-pri" onclick="confirmCard()">Conferma</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════ CONFIRM ══════════════════════ -->
 <div class="co" id="co-dialog">
   <div class="co-box">
@@ -758,6 +792,18 @@ function startTimerTick() {
 
 function stopTimerTick() { clearInterval(_timerInterval); _timerInterval = null; }
 
+let _wakeLock = null;
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try { _wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+}
+function releaseWakeLock() {
+  if (_wakeLock) { _wakeLock.release().catch(()=>{}); _wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && S.liveId) requestWakeLock();
+});
+
 function pauseTimer(id) {
   const m = S.matches.find(x => x.id === id);
   if (!m || m.s !== 'l' || m.halfBreak) return;
@@ -813,8 +859,10 @@ function finishMatchAuto(id) {
   m.s = 'f';
   m.pausedAt = null;
   stopTimerTick();
+  releaseWakeLock();
   save();
   renderLive();
+  updateLiveBadge();
   toast('Partita terminata ✓');
 }
 
@@ -860,6 +908,7 @@ function save() {
   const data = { tourn: S.tourn, matches: S.matches, liveId: S.liveId || null };
   localStorage.setItem('trn-v2', JSON.stringify(data));
   DOC.set(data).catch(() => {});
+  updateLiveBadge();
 }
 
 // ════════════════════════════════════════
@@ -877,6 +926,20 @@ function go(v) {
   render(v);
 }
 
+function updateLiveBadge() {
+  const count = S.matches.filter(x => x.s === 'l').length;
+  const btn = document.getElementById('nb-live');
+  if (!btn) return;
+  btn.style.position = 'relative';
+  let badge = btn.querySelector('.live-badge');
+  if (count > 0) {
+    if (!badge) { badge = document.createElement('span'); badge.className = 'live-badge'; btn.appendChild(badge); }
+    badge.textContent = count;
+  } else {
+    if (badge) badge.remove();
+  }
+}
+
 function render(v) {
   if (v === 'home') renderHome();
   else if (v === 'matches') renderMatches();
@@ -884,6 +947,7 @@ function render(v) {
   else if (v === 'classifica') renderClassifica();
   else if (v === 'scorers') renderScorers();
   else if (v === 'settings') renderSettings();
+  updateLiveBadge();
 }
 
 // ════════════════════════════════════════
@@ -984,6 +1048,11 @@ function statusBadge(s) {
 // ════════════════════════════════════════
 // MATCHES LIST
 // ════════════════════════════════════════
+function sortMatchesByTime() {
+  S.matches.sort((a, b) => (a.time||'').localeCompare(b.time||''));
+  save(); renderMatches(); toast('Ordinate per orario ✓');
+}
+
 function renderMatches() {
   const el = document.getElementById('matches-body');
   if (S.matches.length === 0) {
@@ -994,7 +1063,9 @@ function renderMatches() {
     </div>`;
     return;
   }
-  el.innerHTML = S.matches.map((m, i) => fullCard(m, i)).join('');
+  el.innerHTML = `<div style="display:flex;justify-content:flex-end;padding:8px 14px 0">
+    <button class="act sm" onclick="sortMatchesByTime()">⏱ Ordina per orario</button>
+  </div>` + S.matches.map((m, i) => fullCard(m, i)).join('');
 }
 
 function fullCard(m, i) {
@@ -1143,6 +1214,28 @@ function renderLive() {
     </div>`;
   }
 
+  // CARD buttons
+  if (isLive && !m.halfBreak) {
+    h += `<div class="card-row">
+      <div style="display:flex;gap:6px">
+        <button class="card-btn" style="background:#F59E0B;color:#111" onclick="showCardModal('${m.id}','${escAttr(m.t1)}','Y')">
+          <span style="font-size:18px">🟨</span><span>GIALLO</span>
+        </button>
+        <button class="card-btn" style="background:var(--red);color:#fff" onclick="showCardModal('${m.id}','${escAttr(m.t1)}','R')">
+          <span style="font-size:18px">🟥</span><span>ROSSO</span>
+        </button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="card-btn" style="background:#F59E0B;color:#111" onclick="showCardModal('${m.id}','${escAttr(m.t2)}','Y')">
+          <span style="font-size:18px">🟨</span><span>GIALLO</span>
+        </button>
+        <button class="card-btn" style="background:var(--red);color:#fff" onclick="showCardModal('${m.id}','${escAttr(m.t2)}','R')">
+          <span style="font-size:18px">🟥</span><span>ROSSO</span>
+        </button>
+      </div>
+    </div>`;
+  }
+
   // Winner / Draw banner
   if (m.s === 'f') {
     if (winner) {
@@ -1182,6 +1275,29 @@ function renderLive() {
         <div style="width:10px;height:10px;border-radius:50%;background:${dot};flex-shrink:0"></div>
         ${isLive ? `<button class="scorer-add" onclick="quickGoal('${m.id}',${si})">+</button>` : ''}
         ${isLive ? `<button class="scorer-del" onclick="rmScorer('${m.id}',${si})">×</button>` : ''}
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  // Cards list
+  if (m.cards && m.cards.length > 0) {
+    h += `<div class="scorers-card">
+      <div class="scorers-hdr">
+        <span class="scorers-ttl">🟨 Cartellini</span>
+        <span style="color:var(--muted);font-size:12px">${m.cards.length}</span>
+      </div>`;
+    m.cards.forEach((c, ci) => {
+      const dot = c.t === m.t1 ? c1 : c2;
+      h += `<div class="scorer-row">
+        <span class="sc-min">${c.min ? c.min+"'" : '—'}</span>
+        <span style="font-size:16px">${c.type === 'Y' ? '🟨' : '🟥'}</span>
+        <div style="flex:1">
+          <div class="scorer-name">${esc(c.n)||'Anonimo'}</div>
+          <div class="scorer-team">${esc(c.t)}</div>
+        </div>
+        <div style="width:10px;height:10px;border-radius:50%;background:${dot};flex-shrink:0"></div>
+        ${isLive ? `<button class="scorer-del" onclick="rmCard('${m.id}',${ci})">×</button>` : ''}
       </div>`;
     });
     h += `</div>`;
@@ -1356,6 +1472,16 @@ function renderSettings() {
     <span class="si-arr">›</span>
   </div>
 
+  <div class="sec-ttl">CONDIVISIONE</div>
+  <div class="si" onclick="sharePublicLink()">
+    <span class="si-ico">🔗</span>
+    <div class="si-body">
+      <div class="si-lbl">Link vista pubblica</div>
+      <div class="si-desc">Spettatori vedono risultati live (sola lettura)</div>
+    </div>
+    <span class="si-arr">›</span>
+  </div>
+
   <div class="sec-ttl">DURATA PARTITA</div>
   <div class="si" style="cursor:default">
     <span class="si-ico">⏱</span>
@@ -1484,9 +1610,16 @@ function delMatch(id) {
 }
 
 function startMatch(id) {
+  if (S.matches.some(x => x.s === 'l')) {
+    showCo('⚠️', 'Partita già in corso', 'C\'è già una partita live.<br>Vuoi iniziare questa comunque?', 'Inizia', () => { closeCo(); doStartMatch(id); });
+  } else {
+    doStartMatch(id);
+  }
+}
+function doStartMatch(id) {
   const m = S.matches.find(x => x.id === id);
   if (!m) return;
-  Object.assign(m, { s: 'l', s1: 0, s2: 0, scorers: [], startedAt: Date.now(),
+  Object.assign(m, { s: 'l', s1: 0, s2: 0, scorers: [], cards: [], startedAt: Date.now(),
     period: 1, halfBreak: false, pausedAt: null, totalPausedMs: 0,
     period2At: null, period2PausedMs: 0, recoveryMins: null });
   S.liveId = id;
@@ -1496,11 +1629,11 @@ function startMatch(id) {
 function goLive(id) {
   S.liveId = id; go('live');
   const m = S.matches.find(x => x.id === id);
-  if (m && m.s === 'l') startTimerTick();
+  if (m && m.s === 'l') { startTimerTick(); requestWakeLock(); }
 }
 
 function backLive() {
-  S.liveId = null; stopTimerTick(); render('live');
+  S.liveId = null; stopTimerTick(); releaseWakeLock(); render('live');
 }
 
 function chg(id, team, delta) {
@@ -1542,7 +1675,7 @@ function finishMatch(id) {
 function resetMatch(id) {
   const m = S.matches.find(x => x.id === id);
   if (!m) return;
-  Object.assign(m, { s: 'p', s1: 0, s2: 0, scorers: [] });
+  Object.assign(m, { s: 'p', s1: 0, s2: 0, scorers: [], cards: [] });
   if (S.liveId === id) { S.liveId = null; }
   save();
   if (S.view === 'live') render('live');
@@ -1593,6 +1726,7 @@ function confirmScorer() {
   m.scorers.push({ n: name, t: S.scorerTeam, min });
   if (S.scorerTeam === m.t1) m.s1++;
   else m.s2++;
+  playGoalSound();
   save(); closeMo('mo-scorer'); renderLive();
   toast(`⚽ Gol! ${name || 'Anonimo'} (${S.scorerTeam})`);
 }
@@ -1607,6 +1741,31 @@ function rmScorer(id, idx) {
   save(); renderLive();
 }
 
+function showCardModal(id, team, type) {
+  S._cardMatchId = id; S._cardTeam = team; S._cardType = type;
+  document.getElementById('card-inp').value = '';
+  document.getElementById('card-title').textContent = type === 'Y' ? '🟨 Cartellino Giallo' : '🟥 Cartellino Rosso';
+  document.getElementById('card-team-lbl').textContent = team;
+  openMo('mo-card');
+  setTimeout(() => document.getElementById('card-inp').focus(), 320);
+}
+function confirmCard() {
+  const m = S.matches.find(x => x.id === S._cardMatchId);
+  if (!m) return;
+  const n = document.getElementById('card-inp').value.trim();
+  const min = m.startedAt ? Math.floor(getMatchSecs(m)/60)+1 : null;
+  if (!m.cards) m.cards = [];
+  m.cards.push({ n, t: S._cardTeam, type: S._cardType, min });
+  save(); closeMo('mo-card'); renderLive();
+  toast(S._cardType === 'Y' ? '🟨 Ammonizione' : '🟥 Espulsione');
+}
+function rmCard(id, idx) {
+  const m = S.matches.find(x => x.id === id);
+  if (!m || !m.cards) return;
+  m.cards.splice(idx, 1);
+  save(); renderLive();
+}
+
 function quickGoal(id, idx) {
   const m = S.matches.find(x => x.id === id);
   if (!m || m.s !== 'l') return;
@@ -1615,6 +1774,7 @@ function quickGoal(id, idx) {
   m.scorers.push({ n: sc.n, t: sc.t, min });
   if (sc.t === m.t1) m.s1++;
   else m.s2++;
+  playGoalSound();
   save(); renderLive();
   toast(`⚽ Gol! ${sc.n || 'Anonimo'} (${sc.t})`);
 }
@@ -1702,6 +1862,22 @@ function fmtDate(ds) {
   return d.toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'2-digit' });
 }
 
+function playGoalSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[880,0,0.15],[1100,0.13,0.15],[1320,0.27,0.22]].forEach(([freq,start,dur]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.28, ctx.currentTime + start);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      o.start(ctx.currentTime + start);
+      o.stop(ctx.currentTime + start + dur + 0.05);
+    });
+  } catch(e) {}
+  if (navigator.vibrate) navigator.vibrate([40, 20, 80, 20, 40]);
+}
+
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -1721,20 +1897,104 @@ document.querySelectorAll('.mo').forEach(o => {
 });
 
 // ════════════════════════════════════════
+// VISTA PUBBLICA
+// ════════════════════════════════════════
+function renderPublicView() {
+  const el = document.getElementById('view-home');
+  const live = S.matches.filter(m => m.s === 'l');
+  const fin  = S.matches.filter(m => m.s === 'f');
+  const standings = computeStandings(fin);
+  let h = `<div style="padding:calc(var(--top)+16px) 14px 28px">
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="font-size:24px;font-weight:900">${esc(S.tourn.name)}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:5px">Vista pubblica · aggiornamento live</div>
+    </div>`;
+  if (live.length > 0) {
+    h += `<div class="sec-ttl">🔴 IN CORSO</div>`;
+    live.forEach(m => {
+      h += `<div class="mc2" style="margin-bottom:10px"><div class="mc-body" style="padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:15px;font-weight:800;flex:1;text-align:right">${esc(m.t1)}</div>
+          <div style="font-size:32px;font-weight:900;color:var(--accent);padding:0 14px">${m.s1}–${m.s2}</div>
+          <div style="font-size:15px;font-weight:800;flex:1">${esc(m.t2)}</div>
+        </div>
+      </div></div>`;
+    });
+  }
+  if (fin.length > 0) {
+    h += `<div class="sec-ttl">RISULTATI</div>`;
+    fin.slice().reverse().forEach(m => {
+      h += `<div class="mc2" style="margin-bottom:8px"><div class="mc-body" style="padding:12px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="font-size:14px;font-weight:700;flex:1;text-align:right">${esc(m.t1)}</div>
+          <div style="font-size:20px;font-weight:900;color:var(--muted);padding:0 12px">${m.s1}–${m.s2}</div>
+          <div style="font-size:14px;font-weight:700;flex:1">${esc(m.t2)}</div>
+        </div>
+      </div></div>`;
+    });
+  }
+  if (standings.length > 0) {
+    h += `<div class="sec-ttl">CLASSIFICA</div><div class="st-card">
+      <div class="st-head"><div class="st-lbl">#</div><div class="st-lbl l">Squadra</div><div class="st-lbl">G</div><div class="st-lbl">V</div><div class="st-lbl">P</div><div class="st-lbl">S</div><div class="st-lbl">DR</div><div class="st-lbl">Pt</div></div>
+      ${standings.map((t,i) => `<div class="st-row ${i===0?'gold':''}">
+        <div class="st-val">${['🥇','🥈','🥉'][i]||i+1}</div>
+        <div class="st-val name">${esc(t.name)}</div>
+        <div class="st-val">${t.G}</div>
+        <div class="st-val" style="color:var(--green)">${t.V}</div>
+        <div class="st-val" style="color:var(--muted)">${t.P}</div>
+        <div class="st-val" style="color:var(--red)">${t.S}</div>
+        <div class="st-val" style="color:${t.Gf-t.Gs>=0?'var(--green)':'var(--red)'}">${t.Gf-t.Gs>0?'+':''}${t.Gf-t.Gs}</div>
+        <div class="st-val pt">${t.Pt}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+  h += `</div>`;
+  el.innerHTML = h;
+}
+
+function sharePublicLink() {
+  const url = location.origin + location.pathname + '?pub';
+  if (navigator.share) {
+    navigator.share({ title: S.tourn.name, url }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(url).then(() => toast('🔗 Link copiato!')).catch(() => {
+      prompt('Copia questo link:', url);
+    });
+  }
+}
+
+// ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
-load();
-renderHome();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-DOC.onSnapshot(snap => {
-  if (!snap.exists) return;
-  const d = snap.data();
-  if (d.tourn) S.tourn = d.tourn;
-  if (d.matches) S.matches = d.matches;
-  S.liveId = d.liveId || null;
-  localStorage.setItem('trn-v2', JSON.stringify(d));
-  render(S.view);
-});
+load();
+
+if (new URLSearchParams(location.search).has('pub')) {
+  document.querySelector('.nav').style.display = 'none';
+  document.getElementById('fab').style.display = 'none';
+  document.body.style.paddingBottom = '0';
+  document.getElementById('view-home').classList.add('active');
+  renderPublicView();
+  DOC.onSnapshot(snap => {
+    if (!snap.exists) return;
+    const d = snap.data();
+    if (d.tourn) S.tourn = d.tourn;
+    if (d.matches) S.matches = d.matches;
+    renderPublicView();
+  });
+} else {
+  renderHome();
+  DOC.onSnapshot(snap => {
+    if (!snap.exists) return;
+    const d = snap.data();
+    if (d.tourn) S.tourn = d.tourn;
+    if (d.matches) S.matches = d.matches;
+    S.liveId = d.liveId || null;
+    localStorage.setItem('trn-v2', JSON.stringify(d));
+    render(S.view);
+  });
+}
 </script>
 </body>
 </html>
