@@ -356,6 +356,16 @@ body{
   <div id="live-body"></div>
 </div>
 
+<!-- ══════════════════════ MARCATORI ══════════════════════ -->
+<div id="view-scorers" class="view">
+  <div class="hdr">
+    <div class="hdr-row">
+      <div><h1>Marcatori</h1><p>Classifica gol</p></div>
+    </div>
+  </div>
+  <div id="scorers-body"></div>
+</div>
+
 <!-- ══════════════════════ SETTINGS ══════════════════════ -->
 <div id="view-settings" class="view">
   <div class="hdr">
@@ -380,9 +390,9 @@ body{
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
     Live
   </button>
-  <button class="nb" id="nb-settings" onclick="go('settings')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-    Altro
+  <button class="nb" id="nb-scorers" onclick="go('scorers')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
+    Marcatori
   </button>
 </nav>
 
@@ -541,6 +551,7 @@ function render(v) {
   if (v === 'home') renderHome();
   else if (v === 'matches') renderMatches();
   else if (v === 'live') renderLive();
+  else if (v === 'scorers') renderScorers();
   else if (v === 'settings') renderSettings();
 }
 
@@ -592,7 +603,14 @@ function renderHome() {
 }
 
 function miniCard(m, clickable) {
-  const click = clickable ? `onclick="goLive('${m.id}')" style="cursor:pointer;border-color:rgba(255,95,109,.35)"` : '';
+  const isClickable = clickable || m.s === 'f';
+  const borderStyle = m.s === 'l' ? ';border-color:rgba(255,95,109,.35)' : '';
+  const click = isClickable ? `onclick="goLive('${m.id}')" style="cursor:pointer${borderStyle}"` : '';
+  let scorersHtml = '';
+  if (m.s === 'f' && m.scorers && m.scorers.length > 0) {
+    const list = m.scorers.map(sc => `⚽ ${esc(sc.n||'Anon')} <span style="color:var(--muted);font-size:10.5px">(${esc(sc.t)})</span>`).join('  ·  ');
+    scorersHtml = `<div style="font-size:12px;margin-top:8px;padding-top:7px;border-top:1px solid var(--border);line-height:1.9">${list}</div>`;
+  }
   return `<div class="mc" ${click}>
     <div class="mc-hdr">
       <span class="mc-time">🕐 ${m.time}${m.date ? ' · ' + fmtDate(m.date) : ''}</span>
@@ -608,6 +626,7 @@ function miniCard(m, clickable) {
         <div class="mc-team r">${m.t2}</div>
       </div>
       ${m.s !== 'p' ? `<div class="mc-score"><div class="mc-snum">${m.s1}</div><div class="mc-ssep">—</div><div class="mc-snum">${m.s2}</div></div>` : ''}
+      ${scorersHtml}
     </div>
   </div>`;
 }
@@ -795,6 +814,69 @@ function renderLive() {
       </div>`;
     });
     h += `</div>`;
+  }
+
+  el.innerHTML = h;
+}
+
+// ════════════════════════════════════════
+// SCORERS
+// ════════════════════════════════════════
+function renderScorers() {
+  const el = document.getElementById('scorers-body');
+  const map = {};
+  S.matches.forEach(m => {
+    (m.scorers || []).forEach(sc => {
+      const key = (sc.n || 'Anonimo') + '|||' + sc.t;
+      if (!map[key]) map[key] = { name: sc.n || 'Anonimo', team: sc.t, goals: 0 };
+      map[key].goals++;
+    });
+  });
+  const list = Object.values(map).sort((a, b) => b.goals - a.goals);
+
+  if (list.length === 0) {
+    el.innerHTML = `<div class="empty">
+      <div class="empty-ico">⚽</div>
+      <div class="empty-ttl">Nessun marcatore</div>
+      <div class="empty-txt">I gol segnati durante le partite live appariranno qui</div>
+    </div>`;
+    return;
+  }
+
+  const medals = ['🥇','🥈','🥉'];
+  let h = `<div class="sec-ttl">CLASSIFICA GOL</div>`;
+  list.forEach((sc, i) => {
+    const rank = i < 3 ? medals[i] : `<span style="font-size:13px;color:var(--muted);font-weight:700;width:28px;text-align:center;display:inline-block">${i+1}</span>`;
+    h += `<div class="si" style="cursor:default">
+      <span class="si-ico">${rank}</span>
+      <div class="si-body">
+        <div class="si-lbl">${esc(sc.name)}</div>
+        <div class="si-desc">${esc(sc.team)}</div>
+      </div>
+      <span style="font-size:24px;font-weight:900;color:var(--accent)">${sc.goals}</span>
+      <span style="font-size:11px;color:var(--muted);margin-left:3px;align-self:flex-end;padding-bottom:3px">gol</span>
+    </div>`;
+  });
+
+  const matchesWithScorers = S.matches.filter(m => m.scorers && m.scorers.length > 0);
+  if (matchesWithScorers.length > 0) {
+    h += `<div class="sec-ttl">PER PARTITA</div>`;
+    matchesWithScorers.forEach(m => {
+      h += `<div class="mc" style="cursor:default">
+        <div class="mc-hdr">
+          <span class="mc-time">🕐 ${m.time}${m.date ? ' · ' + fmtDate(m.date) : ''}</span>
+          ${statusBadge(m.s)}
+        </div>
+        <div class="mc-body">
+          <div style="font-size:14px;font-weight:800;text-align:center;margin-bottom:10px">${esc(m.t1)} <span style="color:var(--accent)">${m.s1} — ${m.s2}</span> ${esc(m.t2)}</div>
+          ${m.scorers.map(sc => `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span>⚽</span>
+            <span style="flex:1;font-size:13px;font-weight:600">${esc(sc.n||'Anonimo')}</span>
+            <span style="font-size:11px;color:var(--muted)">${esc(sc.t)}</span>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    });
   }
 
   el.innerHTML = h;
