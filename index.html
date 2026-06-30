@@ -404,6 +404,20 @@ body{
 }
 .undo-btn:active{opacity:.6;transform:scale(.96)}
 .sc-min{font-size:11px;color:var(--accent);font-weight:700;width:28px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.pause-btn{
+  width:32px;height:32px;border-radius:50%;
+  border:1.5px solid var(--border);background:rgba(255,255,255,.08);
+  color:var(--fg);font-size:15px;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .1s,transform .1s;font-family:inherit;
+}
+.pause-btn:active{opacity:.5;transform:scale(.88)}
+.live2-timer.paused{opacity:.55}
+.half-break-banner{
+  text-align:center;padding:18px 20px 14px;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -595,6 +609,24 @@ body{
   </div>
 </div>
 
+<!-- ══════════════════════ MODAL: RECUPERO ══════════════════════ -->
+<div class="mo" id="mo-recovery">
+  <div class="mo-box">
+    <div class="mo-handle"></div>
+    <h2 class="mo-title">⏱ Fine 2° Tempo</h2>
+    <p style="text-align:center;color:var(--muted);margin:0 0 20px;font-size:15px">Quanti minuti di recupero?</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">
+      <button class="npbtn" onclick="setRecovery(0)" style="padding:18px 0;font-size:24px">0</button>
+      <button class="npbtn" onclick="setRecovery(1)" style="padding:18px 0;font-size:24px">1</button>
+      <button class="npbtn" onclick="setRecovery(2)" style="padding:18px 0;font-size:24px">2</button>
+      <button class="npbtn" onclick="setRecovery(3)" style="padding:18px 0;font-size:24px">3</button>
+      <button class="npbtn" onclick="setRecovery(4)" style="padding:18px 0;font-size:24px">4</button>
+      <button class="npbtn" onclick="setRecovery(5)" style="padding:18px 0;font-size:24px">5</button>
+    </div>
+    <p style="text-align:center;color:var(--muted);font-size:12px;margin:0">0 = fine partita immediata</p>
+  </div>
+</div>
+
 <!-- ══════════════════════ CONFIRM ══════════════════════ -->
 <div class="co" id="co-dialog">
   <div class="co-box">
@@ -650,19 +682,133 @@ function pickColor(containerId, hiddenId, color) {
 }
 
 let _timerInterval = null;
+
+function getMatchSecs(m) {
+  const now = Date.now();
+  if (!m.period || m.period === 1) {
+    let elapsed = now - m.startedAt - (m.totalPausedMs || 0);
+    if (m.pausedAt) elapsed -= (now - m.pausedAt);
+    return Math.max(0, elapsed / 1000);
+  } else {
+    if (!m.period2At) return 900;
+    let elapsed2 = now - m.period2At - (m.period2PausedMs || 0);
+    if (m.pausedAt) elapsed2 -= (now - m.pausedAt);
+    return 900 + Math.max(0, elapsed2 / 1000);
+  }
+}
+
+function periodLabel(m) {
+  if (m.halfBreak) return 'INTERVALLO';
+  if (!m.period || m.period === 1) return '1° TEMPO';
+  if (m.recoveryMins > 0) return 'RECUPERO';
+  return '2° TEMPO';
+}
+
+function fmtSecs(secs) {
+  const s = Math.floor(secs);
+  return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+
 function startTimerTick() {
   clearInterval(_timerInterval);
   _timerInterval = setInterval(() => {
     const el = document.getElementById('live-timer');
     if (!el || !S.liveId) return;
     const m = S.matches.find(x => x.id === S.liveId);
-    if (m && m.s === 'l' && m.startedAt) {
-      const secs = Math.floor((Date.now() - m.startedAt) / 1000);
-      el.textContent = `${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`;
+    if (!m || m.s !== 'l' || m.halfBreak || m.pausedAt) return;
+
+    const secs = getMatchSecs(m);
+    const HALF = 900;   // 15 min in seconds
+    const FULL = 1800;  // 30 min in seconds
+    const RECOVERY_END = FULL + (m.recoveryMins || 0) * 60;
+
+    if (m.period === 1 || !m.period) {
+      if (secs >= HALF) {
+        el.textContent = '15:00';
+        m.halfBreak = true;
+        save();
+        renderLive();
+        return;
+      }
+      el.textContent = fmtSecs(secs);
+    } else {
+      if (m.recoveryMins == null && secs >= FULL) {
+        el.textContent = '30:00';
+        stopTimerTick();
+        showRecoveryModal(m.id);
+        return;
+      }
+      if (m.recoveryMins != null && secs >= RECOVERY_END) {
+        el.textContent = fmtSecs(RECOVERY_END);
+        finishMatchAuto(m.id);
+        return;
+      }
+      el.textContent = fmtSecs(secs);
     }
   }, 1000);
 }
+
 function stopTimerTick() { clearInterval(_timerInterval); _timerInterval = null; }
+
+function pauseTimer(id) {
+  const m = S.matches.find(x => x.id === id);
+  if (!m || m.s !== 'l' || m.halfBreak) return;
+  if (m.pausedAt) {
+    const dur = Date.now() - m.pausedAt;
+    if (!m.period || m.period === 1) m.totalPausedMs = (m.totalPausedMs || 0) + dur;
+    else m.period2PausedMs = (m.period2PausedMs || 0) + dur;
+    m.pausedAt = null;
+    save();
+    startTimerTick();
+  } else {
+    m.pausedAt = Date.now();
+    save();
+  }
+  renderLive();
+}
+
+function startPeriod2(id) {
+  const m = S.matches.find(x => x.id === id);
+  if (!m || m.s !== 'l' || !m.halfBreak) return;
+  m.period = 2;
+  m.halfBreak = false;
+  m.period2At = Date.now();
+  m.period2PausedMs = 0;
+  m.pausedAt = null;
+  save();
+  startTimerTick();
+  renderLive();
+}
+
+function showRecoveryModal(id) {
+  S._recoveryMatchId = id;
+  openMo('mo-recovery');
+}
+
+function setRecovery(mins) {
+  closeMo('mo-recovery');
+  const m = S.matches.find(x => x.id === S._recoveryMatchId);
+  if (!m) return;
+  m.recoveryMins = mins;
+  if (mins === 0) {
+    finishMatchAuto(m.id);
+  } else {
+    save();
+    startTimerTick();
+    renderLive();
+  }
+}
+
+function finishMatchAuto(id) {
+  const m = S.matches.find(x => x.id === id);
+  if (!m) return;
+  m.s = 'f';
+  m.pausedAt = null;
+  stopTimerTick();
+  save();
+  renderLive();
+  toast('Partita terminata ✓');
+}
 
 // ════════════════════════════════════════
 // FIREBASE
@@ -906,7 +1052,24 @@ function renderLive() {
   const winner = m.s === 'f' ? (m.s1 > m.s2 ? m.t1 : m.s2 > m.s1 ? m.t2 : null) : null;
   const isLive = m.s === 'l';
 
-  if (isLive) startTimerTick();
+  if (isLive && !m.halfBreak && !m.pausedAt) startTimerTick();
+
+  // Build timer widget for header
+  let timerWidget;
+  if (isLive) {
+    const isPaused = !!m.pausedAt;
+    const isHalf = !!m.halfBreak;
+    const timerClass = `live2-timer${isPaused ? ' paused' : ''}`;
+    timerWidget = `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="${timerClass}" id="live-timer">00:00</div>
+        ${!isHalf ? `<button class="pause-btn" onclick="pauseTimer('${m.id}')">${isPaused ? '&#9654;' : '&#9646;&#9646;'}</button>` : ''}
+      </div>
+      <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px">${periodLabel(m)}</div>
+    </div>`;
+  } else {
+    timerWidget = `<div style="font-size:12px;color:var(--muted);font-weight:600">🕐 ${m.time}</div>`;
+  }
 
   // Header
   let h = `<div class="live2-hdr">
@@ -917,7 +1080,7 @@ function renderLive() {
       <div style="font-size:12px;font-weight:700;color:var(--muted)">${esc(m.cat||m.time)}</div>
       ${statusBadge(m.s)}
     </div>
-    ${isLive ? `<div class="live2-timer" id="live-timer">00:00</div>` : `<div style="font-size:12px;color:var(--muted);font-weight:600">🕐 ${m.time}</div>`}
+    ${timerWidget}
   </div>`;
 
   // Teams + score (3-column grid like mockup)
@@ -936,8 +1099,16 @@ function renderLive() {
     </div>
   </div>`;
 
-  // GOAL buttons (side by side)
-  if (isLive) {
+  // HALF-BREAK banner
+  if (isLive && m.halfBreak) {
+    h += `<div class="half-break-banner">
+      <div style="font-size:15px;font-weight:800;color:var(--muted);margin-bottom:14px">Fine 1° Tempo</div>
+      <button class="btn btn-pri" onclick="startPeriod2('${m.id}')">&#9654; Inizia 2° Tempo</button>
+    </div>`;
+  }
+
+  // GOAL buttons (side by side) — hidden during half-break or pause
+  if (isLive && !m.halfBreak) {
     h += `<div style="display:flex;justify-content:space-around;padding:10px 28px 4px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
         <button class="goal-btn" style="background:${c1};color:${needsDark(c1)?'#111':'#fff'}" onclick="scoreGoal('${m.id}',1)">
@@ -1012,10 +1183,15 @@ function renderLive() {
   el.innerHTML = h;
 
   // Init timer display
-  if (isLive && m.startedAt) {
-    const secs = Math.floor((Date.now() - m.startedAt) / 1000);
+  if (isLive) {
     const timerEl = document.getElementById('live-timer');
-    if (timerEl) timerEl.textContent = `${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`;
+    if (timerEl) {
+      if (m.halfBreak) {
+        timerEl.textContent = '15:00';
+      } else if (m.startedAt) {
+        timerEl.textContent = fmtSecs(getMatchSecs(m));
+      }
+    }
   }
 }
 
@@ -1289,7 +1465,9 @@ function delMatch(id) {
 function startMatch(id) {
   const m = S.matches.find(x => x.id === id);
   if (!m) return;
-  Object.assign(m, { s: 'l', s1: 0, s2: 0, scorers: [], startedAt: Date.now() });
+  Object.assign(m, { s: 'l', s1: 0, s2: 0, scorers: [], startedAt: Date.now(),
+    period: 1, halfBreak: false, pausedAt: null, totalPausedMs: 0,
+    period2At: null, period2PausedMs: 0, recoveryMins: null });
   S.liveId = id;
   save(); go('live'); goLive(id);
 }
@@ -1318,7 +1496,7 @@ function scoreGoal(id, team) {
   S.scorerMatchId = id;
   S.scorerTeam = team === 1 ? m.t1 : m.t2;
   document.getElementById('scorer-inp').value = '';
-  document.getElementById('scorer-min').value = m.startedAt ? String(Math.floor((Date.now()-m.startedAt)/60000)+1) : '';
+  document.getElementById('scorer-min').value = m.startedAt ? String(Math.floor(getMatchSecs(m)/60)+1) : '';
   renderScorerTeams(m);
   openMo('mo-scorer');
   setTimeout(() => document.getElementById('scorer-inp').focus(), 320);
