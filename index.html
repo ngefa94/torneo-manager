@@ -310,6 +310,18 @@ body{
 /* ── DIVIDER ── */
 .div{height:1px;background:var(--border);margin:4px 14px}
 
+/* ── STANDINGS ── */
+.st-card{background:var(--card);border:1px solid var(--border);border-radius:16px;margin:0 14px 14px;overflow:hidden}
+.st-head{display:grid;grid-template-columns:24px 1fr 28px 28px 28px 28px 36px 36px;gap:2px;padding:8px 10px;border-bottom:1px solid var(--border)}
+.st-row{display:grid;grid-template-columns:24px 1fr 28px 28px 28px 28px 36px 36px;gap:2px;padding:9px 10px;border-bottom:1px solid var(--border)}
+.st-row:last-child{border-bottom:none}
+.st-row.gold{background:rgba(217,255,0,.07)}
+.st-lbl{font-size:9.5px;font-weight:700;color:var(--muted);letter-spacing:.4px;text-align:center;align-self:center}
+.st-lbl.l{text-align:left}
+.st-val{font-size:13px;font-weight:600;text-align:center;align-self:center}
+.st-val.name{text-align:left;font-weight:700;font-size:13.5px}
+.st-val.pt{font-weight:900;font-size:15px;color:var(--accent)}
+
 /* info bar */
 .info-bar{
   display:flex;align-items:center;gap:7px;
@@ -356,6 +368,16 @@ body{
   <div id="live-body"></div>
 </div>
 
+<!-- ══════════════════════ CLASSIFICA ══════════════════════ -->
+<div id="view-classifica" class="view">
+  <div class="hdr">
+    <div class="hdr-row">
+      <div><h1>Classifica</h1><p>Punti e statistiche squadre</p></div>
+    </div>
+  </div>
+  <div id="classifica-body"></div>
+</div>
+
 <!-- ══════════════════════ MARCATORI ══════════════════════ -->
 <div id="view-scorers" class="view">
   <div class="hdr">
@@ -390,8 +412,12 @@ body{
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
     Live
   </button>
-  <button class="nb" id="nb-scorers" onclick="go('scorers')">
+  <button class="nb" id="nb-classifica" onclick="go('classifica')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
+    Classifica
+  </button>
+  <button class="nb" id="nb-scorers" onclick="go('scorers')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
     Marcatori
   </button>
 </nav>
@@ -551,6 +577,7 @@ function render(v) {
   if (v === 'home') renderHome();
   else if (v === 'matches') renderMatches();
   else if (v === 'live') renderLive();
+  else if (v === 'classifica') renderClassifica();
   else if (v === 'scorers') renderScorers();
   else if (v === 'settings') renderSettings();
 }
@@ -816,6 +843,80 @@ function renderLive() {
     h += `</div>`;
   }
 
+  el.innerHTML = h;
+}
+
+// ════════════════════════════════════════
+// CLASSIFICA
+// ════════════════════════════════════════
+function computeStandings(matches) {
+  const teams = {};
+  const ensure = n => { if (!teams[n]) teams[n] = { name: n, G:0, V:0, P:0, S:0, Gf:0, Gs:0, Pt:0 }; };
+  matches.filter(m => m.s === 'f').forEach(m => {
+    ensure(m.t1); ensure(m.t2);
+    teams[m.t1].G++; teams[m.t2].G++;
+    teams[m.t1].Gf += m.s1; teams[m.t1].Gs += m.s2;
+    teams[m.t2].Gf += m.s2; teams[m.t2].Gs += m.s1;
+    if (m.s1 > m.s2)      { teams[m.t1].V++; teams[m.t1].Pt += 3; teams[m.t2].S++; }
+    else if (m.s2 > m.s1) { teams[m.t2].V++; teams[m.t2].Pt += 3; teams[m.t1].S++; }
+    else                   { teams[m.t1].P++; teams[m.t2].P++; teams[m.t1].Pt++; teams[m.t2].Pt++; }
+  });
+  return Object.values(teams).sort((a, b) => {
+    if (b.Pt !== a.Pt) return b.Pt - a.Pt;
+    const dB = b.Gf - b.Gs, dA = a.Gf - a.Gs;
+    if (dB !== dA) return dB - dA;
+    return b.Gf - a.Gf;
+  });
+}
+
+function renderClassifica() {
+  const el = document.getElementById('classifica-body');
+  const finished = S.matches.filter(m => m.s === 'f');
+  if (finished.length === 0) {
+    el.innerHTML = `<div class="empty">
+      <div class="empty-ico">🏆</div>
+      <div class="empty-ttl">Nessuna partita terminata</div>
+      <div class="empty-txt">La classifica si aggiornerà automaticamente al termine delle partite</div>
+    </div>`;
+    return;
+  }
+  const groups = {};
+  S.matches.forEach(m => {
+    const cat = m.cat || '__all__';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(m);
+  });
+  const tableHeader = () => `<div class="st-head">
+    <div class="st-lbl">#</div>
+    <div class="st-lbl l">Squadra</div>
+    <div class="st-lbl">G</div>
+    <div class="st-lbl">V</div>
+    <div class="st-lbl">P</div>
+    <div class="st-lbl">S</div>
+    <div class="st-lbl">DR</div>
+    <div class="st-lbl">Pt</div>
+  </div>`;
+  const medals = ['🥇','🥈','🥉'];
+  let h = '';
+  Object.entries(groups).forEach(([cat, matches]) => {
+    const standings = computeStandings(matches);
+    if (standings.length === 0) return;
+    const title = cat === '__all__' ? 'CLASSIFICA GENERALE' : esc(cat).toUpperCase();
+    h += `<div class="sec-ttl">${title}</div>
+    <div class="st-card">
+      ${tableHeader()}
+      ${standings.map((t, i) => `<div class="st-row ${i===0?'gold':''}">
+        <div class="st-val">${i < 3 ? medals[i] : i+1}</div>
+        <div class="st-val name">${esc(t.name)}</div>
+        <div class="st-val">${t.G}</div>
+        <div class="st-val" style="color:var(--green)">${t.V}</div>
+        <div class="st-val" style="color:var(--muted)">${t.P}</div>
+        <div class="st-val" style="color:var(--red)">${t.S}</div>
+        <div class="st-val" style="color:${t.Gf-t.Gs>=0?'var(--green)':'var(--red)'}">${t.Gf-t.Gs>0?'+':''}${t.Gf-t.Gs}</div>
+        <div class="st-val pt">${t.Pt}</div>
+      </div>`).join('')}
+    </div>`;
+  });
   el.innerHTML = h;
 }
 
