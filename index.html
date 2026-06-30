@@ -310,6 +310,27 @@ body{
 /* ── DIVIDER ── */
 .div{height:1px;background:var(--border);margin:4px 14px}
 
+/* ── MATCH CARD v2 ── */
+.mc2{background:var(--card);border:1px solid var(--border);border-radius:18px;margin:6px 14px;overflow:hidden;transition:transform .1s}
+.mc2:active{transform:scale(.985)}
+.mc2-main{display:flex;align-items:center;padding:12px 14px;gap:10px}
+.mc2-left{display:flex;flex-direction:column;gap:2px;min-width:38px;flex-shrink:0}
+.mc2-time2{font-size:13px;font-weight:800;color:var(--accent)}
+.mc2-cat2{font-size:10px;color:var(--muted);background:rgba(255,255,255,.06);padding:2px 5px;border-radius:8px;display:inline-block;margin-top:2px;white-space:nowrap;overflow:hidden;max-width:50px;text-overflow:ellipsis}
+.mc2-teams{flex:1;display:flex;align-items:center;gap:6px}
+.mc2-team{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.mc2-tname{font-size:11px;font-weight:800;text-align:center;line-height:1.2}
+.mc2-center{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.mc2-score{font-size:22px;font-weight:900;letter-spacing:-1px;line-height:1}
+.mc2-vs{font-size:12px;color:var(--muted);font-weight:600}
+.mc2-actions{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--border)}
+
+/* ── NUMPAD ── */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.npbtn{padding:13px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .1s}
+.npbtn:active{background:var(--accent);color:#111}
+.npbtn.del{font-size:20px}
+
 /* ── STANDINGS ── */
 .st-card{background:var(--card);border:1px solid var(--border);border-radius:16px;margin:0 14px 14px;overflow:hidden}
 .st-head{display:grid;grid-template-columns:24px 1fr 28px 28px 28px 28px 36px 36px;gap:2px;padding:8px 10px;border-bottom:1px solid var(--border)}
@@ -531,11 +552,24 @@ body{
         <input class="fi" type="text" id="scorer-inp" placeholder="Nome giocatore" autocomplete="off">
       </div>
       <div class="fg" style="flex:1">
-        <label class="fl">Minuto <span style="color:var(--muted);text-transform:none;font-weight:400">(opz.)</span></label>
-        <input class="fi" type="number" id="scorer-min" placeholder="es. 23" min="1" max="120" autocomplete="off">
+        <label class="fl">Minuto</label>
+        <input class="fi" type="number" id="scorer-min" placeholder="—" min="1" max="120" autocomplete="off" readonly style="text-align:center;font-size:18px;font-weight:800;color:var(--accent)">
       </div>
     </div>
-    <div style="display:flex;gap:9px;margin-top:6px">
+    <div class="numpad">
+      <button class="npbtn" onclick="npPress('1')">1</button>
+      <button class="npbtn" onclick="npPress('2')">2</button>
+      <button class="npbtn" onclick="npPress('3')">3</button>
+      <button class="npbtn" onclick="npPress('4')">4</button>
+      <button class="npbtn" onclick="npPress('5')">5</button>
+      <button class="npbtn" onclick="npPress('6')">6</button>
+      <button class="npbtn" onclick="npPress('7')">7</button>
+      <button class="npbtn" onclick="npPress('8')">8</button>
+      <button class="npbtn" onclick="npPress('9')">9</button>
+      <button class="npbtn" onclick="npPress('0')" style="grid-column:span 2">0</button>
+      <button class="npbtn del" onclick="npPress('del')">⌫</button>
+    </div>
+    <div style="display:flex;gap:9px;margin-top:10px">
       <button class="btn btn-sec" onclick="closeMo('mo-scorer')">Annulla</button>
       <button class="btn btn-pri" onclick="confirmScorer()">Conferma Gol</button>
     </div>
@@ -586,6 +620,17 @@ function jersey(color, size=42) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 50 56" fill="none">
     <path d="M18 4C18 4 20 11 25 11C30 11 32 4 32 4L47 15L41 23L35 20L35 53L15 53L15 20L9 23L3 15Z" fill="${c}" stroke="${dark}" stroke-width="1.5" stroke-linejoin="round"/>
   </svg>`;
+}
+
+function needsDark(c) {
+  return ['#FFFFFF','#FFD700','#D9FF00','#22C55E','#F97316'].includes(c);
+}
+
+function npPress(val) {
+  const el = document.getElementById('scorer-min');
+  if (val === 'del') { el.value = String(el.value||'').slice(0,-1); return; }
+  const next = (el.value||'') + val;
+  if (parseInt(next) <= 120) el.value = next;
 }
 
 function renderColorPick(containerId, hiddenId, selectedColor) {
@@ -731,33 +776,44 @@ function renderHome() {
   document.getElementById('home-body').innerHTML = h;
 }
 
+function matchCardInner(m) {
+  const c1 = m.t1color||'#FFD700', c2 = m.t2color||'#3B82F6';
+  const center = m.s !== 'p'
+    ? `<div class="mc2-score">${m.s1} <span style="color:var(--muted);font-weight:300">-</span> ${m.s2}</div>${statusBadge(m.s)}`
+    : `<div class="mc2-vs">VS</div>${statusBadge(m.s)}`;
+  return `<div class="mc2-main">
+    <div class="mc2-left">
+      <div class="mc2-time2">${m.time}</div>
+      ${m.date ? `<div style="font-size:9px;color:var(--muted)">${fmtDate(m.date)}</div>` : ''}
+      ${m.cat ? `<div class="mc2-cat2">${esc(m.cat)}</div>` : ''}
+    </div>
+    <div class="mc2-teams">
+      <div class="mc2-team">
+        ${jersey(c1, 38)}
+        <div class="mc2-tname">${esc(m.t1)}</div>
+      </div>
+      <div class="mc2-center">${center}</div>
+      <div class="mc2-team">
+        ${jersey(c2, 38)}
+        <div class="mc2-tname">${esc(m.t2)}</div>
+      </div>
+    </div>
+    <div style="color:var(--muted);font-size:20px;flex-shrink:0">›</div>
+  </div>`;
+}
+
 function miniCard(m, clickable) {
   const isClickable = clickable || m.s === 'f';
-  const borderStyle = m.s === 'l' ? ';border-color:rgba(255,95,109,.35)' : '';
-  const click = isClickable ? `onclick="goLive('${m.id}')" style="cursor:pointer${borderStyle}"` : '';
-  const c1 = m.t1color || '#FFD700', c2 = m.t2color || '#3B82F6';
+  const liveBorder = m.s === 'l' ? 'border-color:rgba(255,95,109,.5)' : '';
+  const click = isClickable ? `onclick="goLive('${m.id}')"` : '';
   let scorersHtml = '';
   if (m.s === 'f' && m.scorers && m.scorers.length > 0) {
-    const list = m.scorers.map(sc => `${sc.min ? `<span style="color:var(--accent);font-size:10px;font-weight:700">${sc.min}'</span> ` : ''}⚽ ${esc(sc.n||'Anon')} <span style="color:var(--muted);font-size:10.5px">(${esc(sc.t)})</span>`).join('  ·  ');
-    scorersHtml = `<div style="font-size:12px;margin-top:8px;padding-top:7px;border-top:1px solid var(--border);line-height:1.9">${list}</div>`;
+    const list = m.scorers.map(sc => `${sc.min?`<b style="color:var(--accent);font-size:10px">${sc.min}'</b> `:''}⚽ ${esc(sc.n||'Anon')}`).join('  ·  ');
+    scorersHtml = `<div style="font-size:11.5px;padding:8px 14px;border-top:1px solid var(--border);color:var(--muted);line-height:1.9">${list}</div>`;
   }
-  return `<div class="mc" ${click}>
-    <div class="mc-hdr">
-      <span class="mc-time">🕐 ${m.time}${m.date ? ' · ' + fmtDate(m.date) : ''}</span>
-      <div style="display:flex;gap:6px;align-items:center">
-        ${m.cat ? `<span class="mc-cat">${m.cat}</span>` : ''}
-        ${statusBadge(m.s)}
-      </div>
-    </div>
-    <div class="mc-body">
-      <div class="mc-teams">
-        <div class="mc-team l" style="display:flex;align-items:center;justify-content:flex-end;gap:6px">${esc(m.t1)}${jersey(c1,22)}</div>
-        <div class="mc-vs">VS</div>
-        <div class="mc-team r" style="display:flex;align-items:center;gap:6px">${jersey(c2,22)}${esc(m.t2)}</div>
-      </div>
-      ${m.s !== 'p' ? `<div class="mc-score"><div class="mc-snum">${m.s1}</div><div class="mc-ssep">—</div><div class="mc-snum">${m.s2}</div></div>` : ''}
-      ${scorersHtml}
-    </div>
+  return `<div class="mc2" ${click} style="${isClickable?'cursor:pointer;':''} ${liveBorder}">
+    ${matchCardInner(m)}
+    ${scorersHtml}
   </div>`;
 }
 
@@ -789,24 +845,9 @@ function fullCard(m, i) {
   if (m.s === 'p')      liveBtn = `<button class="act pri" onclick="startMatch('${m.id}')">▶ Inizia</button>`;
   else if (m.s === 'l') liveBtn = `<button class="act pri" style="background:var(--red);border-color:var(--red)" onclick="goLive('${m.id}')">🔴 Live</button>`;
   else                  liveBtn = `<button class="act" onclick="resetMatch('${m.id}')">↺ Reset</button>`;
-
-  return `<div class="mc" id="mc-${m.id}">
-    <div class="mc-hdr">
-      <span class="mc-time">🕐 ${m.time}${m.date ? ' · ' + fmtDate(m.date) : ''}</span>
-      <div style="display:flex;gap:6px;align-items:center">
-        ${m.cat ? `<span class="mc-cat">${m.cat}</span>` : ''}
-        ${statusBadge(m.s)}
-      </div>
-    </div>
-    <div class="mc-body">
-      <div class="mc-teams">
-        <div class="mc-team l">${m.t1}</div>
-        <div class="mc-vs">VS</div>
-        <div class="mc-team r">${m.t2}</div>
-      </div>
-      ${m.s !== 'p' ? `<div class="mc-score"><div class="mc-snum">${m.s1}</div><div class="mc-ssep">—</div><div class="mc-snum">${m.s2}</div></div>` : ''}
-    </div>
-    <div class="mc-acts">
+  return `<div class="mc2" id="mc-${m.id}">
+    ${matchCardInner(m)}
+    <div class="mc2-actions">
       <button class="act sm" onclick="moveMatch('${m.id}',-1)" ${first?'disabled':''}>↑</button>
       <button class="act sm" onclick="moveMatch('${m.id}',1)" ${last?'disabled':''}>↓</button>
       ${liveBtn}
@@ -875,32 +916,41 @@ function renderLive() {
     ${isLive ? `<div class="live2-timer" id="live-timer">00:00</div>` : `<div style="font-size:12px;color:var(--muted);font-weight:600">🕐 ${m.time}</div>`}
   </div>`;
 
-  // Teams + scores + goal buttons
-  h += `<div class="live2-teams">
-    <div class="live2-team">
-      <div style="margin-bottom:4px">${jersey(c1, 52)}</div>
+  // Teams + score (3-column grid like mockup)
+  h += `<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 18px 8px;gap:10px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+      ${jersey(c1, 62)}
       <div class="live2-tname">${esc(m.t1)}</div>
-      <div class="live2-score${isLive?' anim':''}" id="snum1">${m.s1}</div>
-      ${isLive ? `
-        <button class="goal-btn" style="background:${c1};color:${c1==='#FFFFFF'||c1==='#FFD700'?'#111':'#fff'}" onclick="scoreGoal('${m.id}',1)">
-          <span style="font-size:18px">⚽</span>GOAL
-        </button>
-        <button class="goal-btn-min" onclick="chg('${m.id}',1,-1)" title="Togli gol">－</button>
-      ` : ''}
     </div>
-    <div class="live2-sep">:</div>
-    <div class="live2-team">
-      <div style="margin-bottom:4px">${jersey(c2, 52)}</div>
+    <div style="text-align:center">
+      <div style="font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1" id="snum1">${m.s1} <span style="color:var(--muted);font-weight:300;font-size:34px">-</span> ${m.s2}</div>
+      <div style="margin-top:6px">${statusBadge(m.s)}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+      ${jersey(c2, 62)}
       <div class="live2-tname">${esc(m.t2)}</div>
-      <div class="live2-score" id="snum2">${m.s2}</div>
-      ${isLive ? `
-        <button class="goal-btn" style="background:${c2};color:${c2==='#FFFFFF'||c2==='#FFD700'?'#111':'#fff'}" onclick="scoreGoal('${m.id}',2)">
-          <span style="font-size:18px">⚽</span>GOAL
-        </button>
-        <button class="goal-btn-min" onclick="chg('${m.id}',2,-1)" title="Togli gol">－</button>
-      ` : ''}
     </div>
   </div>`;
+
+  // GOAL buttons (side by side)
+  if (isLive) {
+    h += `<div style="display:flex;justify-content:space-around;padding:10px 28px 4px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <button class="goal-btn" style="background:${c1};color:${needsDark(c1)?'#111':'#fff'}" onclick="scoreGoal('${m.id}',1)">
+          <span style="font-size:26px;font-weight:900;line-height:1">+</span>
+          <span style="font-size:10px;font-weight:900;letter-spacing:1px">GOAL</span>
+        </button>
+        <button class="goal-btn-min" onclick="chg('${m.id}',1,-1)">－</button>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <button class="goal-btn" style="background:${c2};color:${needsDark(c2)?'#111':'#fff'}" onclick="scoreGoal('${m.id}',2)">
+          <span style="font-size:26px;font-weight:900;line-height:1">+</span>
+          <span style="font-size:10px;font-weight:900;letter-spacing:1px">GOAL</span>
+        </button>
+        <button class="goal-btn-min" onclick="chg('${m.id}',2,-1)">－</button>
+      </div>
+    </div>`;
+  }
 
   // UNDO
   if (isLive && m.scorers && m.scorers.length > 0) {
