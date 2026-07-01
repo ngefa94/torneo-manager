@@ -13,20 +13,20 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#071A10;
-  --bg2:#0B4F2C;
-  --card:#103C24;
-  --card2:#16A34A;
-  --accent:#D9FF00;
-  --accent-dim:rgba(217,255,0,.2);
-  --red:#ff5f6d;
-  --red-dim:rgba(255,95,109,.15);
+  --bg:#091409;
+  --bg2:#111d11;
+  --card:#141f14;
+  --card2:#1a2e1a;
+  --accent:#22C55E;
+  --accent-dim:rgba(34,197,94,.15);
+  --red:#EF4444;
+  --red-dim:rgba(239,68,68,.15);
   --green:#22C55E;
   --green-dim:rgba(34,197,94,.12);
-  --yellow:#D9FF00;
+  --yellow:#F59E0B;
   --text:#FFFFFF;
-  --muted:#8aaa96;
-  --border:rgba(255,255,255,.1);
+  --muted:#6b8474;
+  --border:rgba(255,255,255,.08);
   --nav:62px;
   --safe:env(safe-area-inset-bottom,0px);
   --top:env(safe-area-inset-top,0px);
@@ -53,9 +53,10 @@ body{
 
 /* ── HEADER ── */
 .hdr{
-  padding:calc(var(--top) + 18px) 20px 16px;
-  background:linear-gradient(180deg,var(--bg2) 60%,transparent);
+  padding:calc(var(--top) + 16px) 20px 14px;
+  background:var(--bg);
   position:sticky;top:0;z-index:40;
+  border-bottom:1px solid var(--border);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
 }
 .hdr h1{font-size:26px;font-weight:800;letter-spacing:-.5px}
@@ -67,7 +68,7 @@ body{
   position:fixed;bottom:0;left:50%;transform:translateX(-50%);
   width:100%;max-width:430px;
   height:calc(var(--nav) + var(--safe));
-  background:rgba(7,26,16,.97);border-top:1px solid var(--border);
+  background:rgba(9,20,9,.98);border-top:1px solid var(--border);
   display:flex;z-index:100;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   padding-bottom:var(--safe);
@@ -79,7 +80,8 @@ body{
   border:none;background:none;letter-spacing:.3px;
   transition:color .15s;
 }
-.nb.active{color:var(--accent)}
+.nb.active{color:var(--accent);position:relative}
+.nb.active::after{content:'';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:20px;height:2px;background:var(--accent);border-radius:2px}
 .nb svg{width:22px;height:22px}
 
 /* ── MATCH CARD ── */
@@ -119,17 +121,17 @@ body{
   transition:background .1s;
 }
 .act:active{opacity:.65;transform:scale(.96)}
-.act.pri{background:var(--accent);border-color:var(--accent);color:#111111}
+.act.pri{background:var(--accent);border-color:var(--accent);color:#fff}
 .act.dnr{color:var(--red);border-color:rgba(255,95,109,.3)}
 .act.sm{flex:0;padding:8px 11px}
 .act:disabled{opacity:.25;pointer-events:none}
 
 /* ── STATUS BADGE ── */
 .sb{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
-.sb-p{background:rgba(110,110,158,.15);color:var(--muted)}
+.sb-p{background:rgba(255,255,255,.06);color:var(--muted)}
 .sb-l{background:var(--red-dim);color:var(--red)}
 .sb-l::before{content:'';width:5px;height:5px;background:var(--red);border-radius:50%;animation:blink 1s infinite}
-.sb-f{background:var(--green-dim);color:var(--green)}
+.sb-f{background:rgba(34,197,94,.15);color:var(--green)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
 /* ── BUTTONS ── */
@@ -140,7 +142,7 @@ body{
   transition:opacity .15s,transform .1s;width:100%;
 }
 .btn:active{opacity:.75;transform:scale(.97)}
-.btn-pri{background:var(--accent);color:#111111}
+.btn-pri{background:var(--accent);color:#fff}
 .btn-sec{background:rgba(255,255,255,.07);color:var(--text)}
 .btn-dnr{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,95,109,.3)}
 .btn-ico{
@@ -153,11 +155,11 @@ body{
 #fab{
   position:fixed;bottom:calc(var(--nav) + var(--safe) + 14px);
   right:max(14px,calc(50vw - 201px));
-  width:52px;height:52px;border-radius:15px;
+  width:54px;height:54px;border-radius:50%;
   background:var(--accent);border:none;color:#111111;
   font-size:28px;cursor:pointer;
   display:none;align-items:center;justify-content:center;
-  box-shadow:0 4px 24px rgba(217,255,0,.4);z-index:90;
+  box-shadow:0 4px 24px rgba(34,197,94,.4);z-index:90;
   transition:transform .15s;font-weight:300;line-height:1;
 }
 #fab.show{display:flex}
@@ -365,8 +367,9 @@ body{
 .live2-hdr{
   padding:calc(var(--top)+12px) 16px 10px;
   display:flex;align-items:center;justify-content:space-between;
-  background:linear-gradient(180deg,var(--bg2) 60%,transparent);
+  background:var(--bg);
   position:sticky;top:0;z-index:40;
+  border-bottom:1px solid var(--border);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
 }
 .live2-timer{
@@ -443,6 +446,31 @@ body{
   border-top:1px solid var(--border);border-bottom:1px solid var(--border);
   background:rgba(255,255,255,.03);
 }
+
+/* ── FILTER TABS ── */
+.ftabs{display:flex;gap:6px;padding:12px 14px 6px}
+.ftab{flex:1;padding:9px 4px;border-radius:10px;border:none;background:rgba(255,255,255,.06);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:all .15s}
+.ftab.active{background:var(--accent);color:#fff}
+.ftab:active{opacity:.7}
+
+/* ── DAY HEADER ── */
+.day-hdr{padding:14px 14px 4px;font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px}
+
+/* ── NEXT ROW (home) ── */
+.next-row{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin:4px 14px;cursor:default}
+.next-row.clickable{cursor:pointer}
+.next-row.clickable:active{opacity:.7;transform:scale(.985)}
+.next-time{font-size:13px;font-weight:800;color:var(--text)}
+.next-day{font-size:10px;color:var(--muted);margin-top:1px}
+.next-teams{flex:1;display:flex;align-items:center;gap:4px}
+.next-tname{font-size:12px;font-weight:700;text-align:center;flex:1;line-height:1.2}
+.next-sep{color:var(--muted);font-size:16px;font-weight:300;padding:0 2px}
+.next-cat{font-size:10px;color:var(--muted);background:rgba(255,255,255,.06);padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+
+/* ── STAT CARD ── */
+.sc-icon{font-size:24px;margin-bottom:6px;display:block}
+.sc-val{font-size:34px;font-weight:900;letter-spacing:-1.5px;line-height:1}
+.sc-lbl{font-size:10px;color:var(--muted);margin-top:5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -454,14 +482,17 @@ body{
 <div id="view-home" class="view active">
   <div class="hdr">
     <div class="hdr-row">
-      <div>
-        <h1 style="font-size:28px;font-weight:900;letter-spacing:-0.5px">REFLY</h1>
-        <p id="home-name" style="font-size:12px;color:var(--muted)">Bentornato!</p>
-      </div>
-      <button class="btn-ico" onclick="go('settings')" title="Impostazioni">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54A.484.484 0 0 0 13.92 2H10.08a.484.484 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.74 8.87a.47.47 0 0 0 .12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58a.47.47 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.47.47 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 0 1 8.4 12 3.6 3.6 0 0 1 12 8.4 3.6 3.6 0 0 1 15.6 12a3.6 3.6 0 0 1-3.6 3.6z"/>
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+          <path d="M16 2L4 7v8c0 7.18 5.1 13.9 12 15.5C22.9 28.9 28 22.18 28 15V7L16 2z" fill="#22C55E" opacity=".18"/>
+          <path d="M16 2L4 7v8c0 7.18 5.1 13.9 12 15.5C22.9 28.9 28 22.18 28 15V7L16 2z" stroke="#22C55E" stroke-width="1.5" fill="none"/>
+          <path d="M11 15l3 3 7-7" stroke="#22C55E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
+        <span style="font-size:24px;font-weight:900;letter-spacing:-0.5px">REFLY</span>
+      </div>
+      <button onclick="openTournModal()" style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:6px 12px;cursor:pointer;color:var(--accent);font-size:12px;font-weight:700;font-family:inherit;max-width:160px">
+        🏆 <span id="home-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Torneo</span>
+        <span style="font-size:10px;color:var(--muted);flex-shrink:0">▾</span>
       </button>
     </div>
   </div>
@@ -472,7 +503,7 @@ body{
 <div id="view-matches" class="view">
   <div class="hdr">
     <div class="hdr-row">
-      <div><h1>Partite</h1><p>Gestisci il programma</p></div>
+      <div><h1>Partite</h1></div>
     </div>
   </div>
   <div id="matches-body"></div>
@@ -532,7 +563,7 @@ body{
     Classifica
   </button>
   <button class="nb" id="nb-scorers" onclick="go('scorers')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
     Marcatori
   </button>
 </nav>
@@ -973,34 +1004,75 @@ function render(v) {
 // HOME
 // ════════════════════════════════════════
 function renderHome() {
-  document.getElementById('home-name').textContent = S.tourn.name;
+  const nameEl = document.getElementById('home-name');
+  if (nameEl) nameEl.textContent = S.tourn.name;
   const tot = S.matches.length;
   const fin = S.matches.filter(m => m.s === 'f').length;
   const pnd = S.matches.filter(m => m.s === 'p').length;
   const lv  = S.matches.filter(m => m.s === 'l');
 
-  let h = `<div class="stats-grid">
-    <div class="sc"><div class="sc-val">${tot}</div><div class="sc-lbl">Totali</div></div>
-    <div class="sc"><div class="sc-val" style="color:var(--green)">${fin}</div><div class="sc-lbl">Terminate</div></div>
-    <div class="sc"><div class="sc-val" style="color:var(--accent)">${pnd}</div><div class="sc-lbl">Da giocare</div></div>
-    <div class="sc"><div class="sc-val" style="color:var(--red)">${lv.length}</div><div class="sc-lbl">In corso</div></div>
+  let h = `<div class="stats-grid" style="padding:14px 14px 6px">
+    <div class="sc" style="border-color:rgba(34,197,94,.2)">
+      <div class="sc-icon">🏟️</div>
+      <div class="sc-val">${tot}</div>
+      <div class="sc-lbl">Totale Partite</div>
+    </div>
+    <div class="sc" style="border-color:rgba(34,197,94,.2)">
+      <div class="sc-icon" style="color:var(--green)">✓</div>
+      <div class="sc-val" style="color:var(--green)">${fin}</div>
+      <div class="sc-lbl">Terminate</div>
+    </div>
+    <div class="sc" style="border-color:rgba(245,158,11,.2)">
+      <div class="sc-icon" style="color:var(--yellow)">⏱</div>
+      <div class="sc-val" style="color:var(--yellow)">${lv.length}</div>
+      <div class="sc-lbl">In Corso</div>
+    </div>
+    <div class="sc" style="border-color:rgba(255,255,255,.1)">
+      <div class="sc-icon" style="color:var(--muted)">⚽</div>
+      <div class="sc-val" style="color:var(--muted)">${pnd}</div>
+      <div class="sc-lbl">Da Giocare</div>
+    </div>
   </div>`;
 
   if (lv.length > 0) {
-    h += `<div class="sec-ttl">⚡ In Corso</div>`;
-    lv.forEach(m => { h += miniCard(m, true); });
+    h += `<div class="sec-ttl" style="padding:14px 14px 8px;display:flex;align-items:center;gap:6px"><span style="color:var(--red);font-size:8px">●</span> IN CORSO</div>`;
+    lv.forEach(m => {
+      const c1=m.t1color||'#FFD700', c2=m.t2color||'#3B82F6';
+      h += `<div class="next-row clickable" onclick="goLive('${m.id}')">
+        <div style="min-width:38px;flex-shrink:0"><div class="next-time">${m.time}</div><div class="next-day" style="color:var(--red)">LIVE</div></div>
+        <div class="next-teams">${jersey(c1,22)}<span class="next-tname">${esc(m.t1)}</span><span style="font-size:17px;font-weight:900;padding:0 6px">${m.s1}–${m.s2}</span><span class="next-tname">${esc(m.t2)}</span>${jersey(c2,22)}</div>
+      </div>`;
+    });
   }
 
-  const upcoming = S.matches.filter(m => m.s === 'p').slice(0, 4);
+  const upcoming = S.matches.filter(m => m.s === 'p').slice(0, 5);
   if (upcoming.length > 0) {
-    h += `<div class="sec-ttl">📅 Prossime Partite</div>`;
-    upcoming.forEach(m => { h += miniCard(m, false); });
+    h += `<div class="sec-ttl" style="padding:14px 14px 8px">📅 PROSSIME PARTITE</div>`;
+    upcoming.forEach(m => {
+      const c1=m.t1color||'#FFD700', c2=m.t2color||'#3B82F6';
+      h += `<div class="next-row">
+        <div style="min-width:36px"><div class="next-time">${m.time}</div><div class="next-day">${m.date?fmtDate(m.date):''}</div></div>
+        <div class="next-teams">
+          ${jersey(c1,22)}<span class="next-tname">${esc(m.t1)}</span>
+          <span class="next-sep">—</span>
+          <span class="next-tname">${esc(m.t2)}</span>${jersey(c2,22)}
+        </div>
+        ${m.cat?`<span class="next-cat">${esc(m.cat)}</span>`:''}
+      </div>`;
+    });
   }
 
   const recent = S.matches.filter(m => m.s === 'f').slice(-3).reverse();
   if (recent.length > 0) {
-    h += `<div class="sec-ttl">🏆 Risultati</div>`;
-    recent.forEach(m => { h += miniCard(m, false); });
+    h += `<div class="sec-ttl" style="padding:14px 14px 8px">🏆 ULTIMI RISULTATI</div>`;
+    recent.forEach(m => {
+      const c1=m.t1color||'#FFD700', c2=m.t2color||'#3B82F6';
+      h += `<div class="next-row clickable" onclick="goLive('${m.id}')">
+        <div style="min-width:38px;flex-shrink:0"><div class="next-time">${m.time}</div><div class="next-day">${m.date?fmtDate(m.date):''}</div></div>
+        <div class="next-teams">${jersey(c1,22)}<span class="next-tname">${esc(m.t1)}</span><span style="font-size:17px;font-weight:900;padding:0 6px">${m.s1}–${m.s2}</span><span class="next-tname">${esc(m.t2)}</span>${jersey(c2,22)}</div>
+        <span class="next-cat" style="color:var(--green);background:var(--green-dim)">FINITA</span>
+      </div>`;
+    });
   }
 
   if (tot === 0) {
@@ -1021,9 +1093,9 @@ function matchCardInner(m) {
   const scoreHtml = m.s !== 'p'
     ? `<div class="mc2-scr">${m.s1} <span style="color:var(--muted);font-weight:300;font-size:14px">-</span> ${m.s2}</div>`
     : `<div style="font-size:18px;color:var(--muted);font-weight:300">—</div>`;
-  const stxt = m.s === 'f' ? `<div class="mc2-stxt fin">Finished</div>`
+  const stxt = m.s === 'f' ? `<div class="mc2-stxt fin">FINITA</div>`
     : m.s === 'l' ? `<div class="mc2-stxt live">● LIVE</div>`
-    : `<div class="mc2-stxt pnd">Upcoming</div>`;
+    : `<div class="mc2-stxt pnd">IN PROGRAMMA</div>`;
   return `<div class="mc2-row">
     <div class="mc2-tblock">
       <div class="mc2-thh">${m.time}</div>
@@ -1077,26 +1149,46 @@ function renderMatches() {
     </div>`;
     return;
   }
+  const filter = window._matchFilter || 'all';
   const sorted = [...S.matches].sort((a, b) => {
     const da = a.date || '9999-99-99', db = b.date || '9999-99-99';
     const dc = da.localeCompare(db);
     if (dc !== 0) return dc;
     return (a.time||'').localeCompare(b.time||'');
   });
-  let html = '';
+  const filtered = sorted.filter(m => {
+    if (filter === 'live') return m.s === 'l';
+    if (filter === 'fin') return m.s === 'f';
+    return true;
+  });
+
+  let html = `<div class="ftabs">
+    <button class="ftab${filter==='all'?' active':''}" onclick="setMatchFilter('all')">TUTTE</button>
+    <button class="ftab${filter==='live'?' active':''}" onclick="setMatchFilter('live')">IN CORSO</button>
+    <button class="ftab${filter==='fin'?' active':''}" onclick="setMatchFilter('fin')">TERMINATE</button>
+  </div>`;
+
+  if (filtered.length === 0) {
+    html += `<div class="empty" style="padding-top:40px"><div class="empty-ico">📋</div><div class="empty-ttl">Nessuna partita</div></div>`;
+    el.innerHTML = html;
+    return;
+  }
+
   let lastDate = undefined;
-  sorted.forEach((m, i) => {
+  filtered.forEach((m) => {
     const dk = m.date || '';
     if (dk !== lastDate) {
       lastDate = dk;
-      const lbl = dk ? fmtDate(dk) : 'Senza data';
-      html += `<div style="padding:10px 14px 2px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-top:${i>0?'1px solid var(--border)':0};margin-top:${i>0?'4px':'0'}">${lbl}</div>`;
+      const lbl = dk ? fmtDate(dk).toUpperCase() : 'SENZA DATA';
+      html += `<div class="day-hdr">${lbl}</div>`;
     }
     const ri = S.matches.indexOf(m);
     html += fullCard(m, ri);
   });
   el.innerHTML = html;
 }
+
+function setMatchFilter(f) { window._matchFilter = f; renderMatches(); }
 
 function fullCard(m, i) {
   const first = i === 0, last = i === S.matches.length - 1;
