@@ -1050,16 +1050,6 @@ function statusBadge(s) {
 // ════════════════════════════════════════
 // MATCHES LIST
 // ════════════════════════════════════════
-function sortMatchesByTime() {
-  S.matches.sort((a, b) => {
-    const da = a.date || '9999-99-99', db = b.date || '9999-99-99';
-    const dc = da.localeCompare(db);
-    if (dc !== 0) return dc;
-    return (a.time||'').localeCompare(b.time||'');
-  });
-  save(); renderMatches(); toast('Ordinate per orario ✓');
-}
-
 function renderMatches() {
   const el = document.getElementById('matches-body');
   if (S.matches.length === 0) {
@@ -1070,18 +1060,23 @@ function renderMatches() {
     </div>`;
     return;
   }
-  let html = `<div style="display:flex;justify-content:flex-end;padding:8px 14px 0">
-    <button class="act sm" onclick="sortMatchesByTime()">⏱ Ordina per orario</button>
-  </div>`;
+  const sorted = [...S.matches].sort((a, b) => {
+    const da = a.date || '9999-99-99', db = b.date || '9999-99-99';
+    const dc = da.localeCompare(db);
+    if (dc !== 0) return dc;
+    return (a.time||'').localeCompare(b.time||'');
+  });
+  let html = '';
   let lastDate = undefined;
-  S.matches.forEach((m, i) => {
+  sorted.forEach((m, i) => {
     const dk = m.date || '';
     if (dk !== lastDate) {
       lastDate = dk;
       const lbl = dk ? fmtDate(dk) : 'Senza data';
       html += `<div style="padding:10px 14px 2px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-top:${i>0?'1px solid var(--border)':0};margin-top:${i>0?'4px':'0'}">${lbl}</div>`;
     }
-    html += fullCard(m, i);
+    const ri = S.matches.indexOf(m);
+    html += fullCard(m, ri);
   });
   el.innerHTML = html;
 }
