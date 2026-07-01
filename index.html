@@ -1440,6 +1440,7 @@ function renderScorers() {
   let h = `<div class="sec-ttl">CLASSIFICA GOL</div>`;
   list.forEach((sc, i) => {
     const rank = i < 3 ? medals[i] : `<span style="font-size:13px;color:var(--muted);font-weight:700;width:28px;text-align:center;display:inline-block">${i+1}</span>`;
+    const key = encodeURIComponent(normalizeName(sc.name) + '|||' + (sc.team || ''));
     h += `<div class="si" style="cursor:default">
       <span class="si-ico">${rank}</span>
       <div class="si-body">
@@ -1448,6 +1449,10 @@ function renderScorers() {
       </div>
       <span style="font-size:24px;font-weight:900;color:var(--accent)">${sc.goals}</span>
       <span style="font-size:11px;color:var(--muted);margin-left:3px;align-self:flex-end;padding-bottom:3px">gol</span>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-left:8px">
+        <button class="act sm" onclick="editScorerName('${key}','${escAttr(sc.name)}')" style="padding:3px 7px;font-size:12px">✏️</button>
+        <button class="act sm dnr" onclick="deleteScorer('${key}')" style="padding:3px 7px;font-size:12px">🗑</button>
+      </div>
     </div>`;
   });
 
@@ -1473,6 +1478,28 @@ function renderScorers() {
   }
 
   el.innerHTML = h;
+}
+
+function editScorerName(encodedKey, currentName) {
+  const key = decodeURIComponent(encodedKey);
+  const newName = prompt('Nuovo nome marcatore:', currentName);
+  if (!newName || !newName.trim() || newName.trim() === currentName) return;
+  const name = newName.trim();
+  S.matches.forEach(m => {
+    (m.scorers || []).forEach(sc => {
+      if (normalizeName(sc.n) + '|||' + (sc.t || '') === key) sc.n = name;
+    });
+  });
+  save(); renderScorers();
+}
+
+function deleteScorer(encodedKey) {
+  const key = decodeURIComponent(encodedKey);
+  if (!confirm('Eliminare questo marcatore dalla classifica gol?')) return;
+  S.matches.forEach(m => {
+    if (m.scorers) m.scorers = m.scorers.filter(sc => normalizeName(sc.n) + '|||' + (sc.t || '') !== key);
+  });
+  save(); renderScorers();
 }
 
 // ════════════════════════════════════════
