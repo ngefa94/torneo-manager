@@ -490,10 +490,15 @@ body{
         </svg>
         <span style="font-size:24px;font-weight:900;letter-spacing:-0.5px">REFLY</span>
       </div>
-      <button onclick="openTournModal()" style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:6px 12px;cursor:pointer;color:var(--accent);font-size:12px;font-weight:700;font-family:inherit;max-width:160px">
-        🏆 <span id="home-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Torneo</span>
-        <span style="font-size:10px;color:var(--muted);flex-shrink:0">▾</span>
-      </button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="openTournModal()" style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:6px 12px;cursor:pointer;color:var(--accent);font-size:12px;font-weight:700;font-family:inherit;max-width:140px">
+          🏆 <span id="home-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Torneo</span>
+          <span style="font-size:10px;color:var(--muted);flex-shrink:0">▾</span>
+        </button>
+        <button class="btn-ico" onclick="go('settings')" title="Impostazioni">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54A.484.484 0 0 0 13.92 2H10.08a.484.484 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.74 8.87a.47.47 0 0 0 .12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58a.47.47 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.47.47 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 0 1 8.4 12 3.6 3.6 0 0 1 12 8.4 3.6 3.6 0 0 1 15.6 12a3.6 3.6 0 0 1-3.6 3.6z"/></svg>
+        </button>
+      </div>
     </div>
   </div>
   <div id="home-body"></div>
