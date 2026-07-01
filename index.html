@@ -727,15 +727,16 @@ let _timerInterval = null;
 
 function getMatchSecs(m) {
   const now = Date.now();
+  const HALF = (S.tourn.halfMins || 15) * 60;
   if (!m.period || m.period === 1) {
     let elapsed = now - m.startedAt - (m.totalPausedMs || 0);
     if (m.pausedAt) elapsed -= (now - m.pausedAt);
     return Math.max(0, elapsed / 1000);
   } else {
-    if (!m.period2At) return 900;
+    if (!m.period2At) return HALF;
     let elapsed2 = now - m.period2At - (m.period2PausedMs || 0);
     if (m.pausedAt) elapsed2 -= (now - m.pausedAt);
-    return 900 + Math.max(0, elapsed2 / 1000);
+    return HALF + Math.max(0, elapsed2 / 1000);
   }
 }
 
