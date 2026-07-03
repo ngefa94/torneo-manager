@@ -278,6 +278,33 @@ body{
 .sc-val{font-size:32px;font-weight:900;letter-spacing:-1.5px;line-height:1}
 .sc-lbl{font-size:11px;color:var(--muted);margin-top:5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
 .sec-ttl{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;padding:16px 16px 8px;display:flex;align-items:center;gap:6px}
+/* ── HOME DASHBOARD ── */
+.tp{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;cursor:pointer;transition:opacity .15s}
+.tp:active{opacity:.7}
+.tp-row{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.tp-name{font-size:14px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-bar-wrap{height:6px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden}
+.tp-bar{height:100%;background:linear-gradient(90deg,var(--accent-dark),var(--accent-light));border-radius:10px;transition:width .8s ease}
+.tp-stat{font-size:11px;color:var(--muted);margin-top:7px;font-weight:600}
+.nm-card{background:var(--card);border:1px solid var(--border);border-radius:16px;margin:0 16px;padding:16px;box-shadow:var(--shadow-sm)}
+.nm-time{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:12px;letter-spacing:.3px}
+.nm-teams{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:14px}
+.nm-col{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+.nm-name{font-size:13px;font-weight:700;text-align:center;line-height:1.2}
+.nm-vs{font-size:13px;color:var(--muted);font-weight:800;background:var(--card2);padding:6px 9px;border-radius:10px;flex-shrink:0}
+.nm-score{font-size:30px;font-weight:900;letter-spacing:-1px;flex-shrink:0}
+.res-list{background:var(--card);border:1px solid var(--border);border-radius:16px;margin:0 16px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.res-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer}
+.res-row:last-child{border-bottom:none}
+.res-row:active{opacity:.6}
+.res-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.res-tname{font-size:12px;font-weight:700;text-align:center}
+.res-score{font-size:20px;font-weight:900;letter-spacing:-0.5px;flex-shrink:0;text-align:center;min-width:48px}
+.res-scorers{font-size:10.5px;color:var(--muted);text-align:center;margin-top:2px}
+.champ-card{background:var(--card);border:1px solid rgba(250,204,21,.3);border-radius:16px;margin:0 16px 6px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);cursor:pointer}
+.champ-card:active{opacity:.7}
+.champ-name{font-size:16px;font-weight:700;flex:1}
+.champ-goals{font-size:22px;font-weight:900;color:var(--yellow)}
 
 /* ── SETTINGS ── */
 .si{
@@ -1024,14 +1051,27 @@ function renderHome() {
   const pnd = S.matches.filter(m => m.s === 'p').length;
   const lv  = S.matches.filter(m => m.s === 'l');
 
-  const icoStats = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z" opacity=".75"/></svg>`;
-  const icoCheck = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>`;
-  const icoClock = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm.5 5v5.25l4.5 2.67-.75 1.23L11 13V7h1.5z"/></svg>`;
-  const icoBall = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.93c-2.82-.48-5.07-2.67-5.52-5.52L9 14l2 2v.93zM12 10l-2-2-3-1 5-2 5 2-3 1-2 2zm5.52 3.41c-.45 2.85-2.7 5.04-5.52 5.52V17l2-2 3.52-1.59z"/></svg>`;
-  const icoCalendar = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>`;
-  const icoBell = `<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 0 0 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`;
+  const icoStats = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z" opacity=".75"/></svg>';
+  const icoCheck = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
+  const icoClock = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm.5 5v5.25l4.5 2.67-.75 1.23L11 13V7h1.5z"/></svg>';
+  const icoBall = '<svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m-.5 2.027V4.5l-3.113 1.83L2.103 5.01A6.99 6.99 0 0 1 7.5 2.027m1 0A6.99 6.99 0 0 1 13.897 5.01l-2.284 1.32L8.5 4.5V2.027zm-6.8 4.003 2.03 1.172V9.5l-2.135 1.395A6.98 6.98 0 0 1 1 8a6.97 6.97 0 0 1 .7-2.97m14 0A6.97 6.97 0 0 1 15 8a6.98 6.98 0 0 1-.595 2.895L12.27 9.5V7.2l2.03-1.17zM8 5.4l2.594 1.886v2.228L8 10.9l-2.594-1.386V7.286zm-5.7 6.507 1.9-1.24L6.5 12.1l.4 2.527a7.01 7.01 0 0 1-4.6-2.72m9.4 2.72.4-2.527 2.3-1.433 1.9 1.24a7.01 7.01 0 0 1-4.6 2.72M7.4 14.7 7 12.15l1-1.25 1 1.25-.4 2.55a7.1 7.1 0 0 1-1.2 0"/></svg>';
 
-  let h = `<div class="stats-grid" style="padding:14px 14px 6px">
+  // ── Barra avanzamento torneo ──
+  const pct = tot > 0 ? Math.round(fin / tot * 100) : 0;
+  let h = `<div style="padding:14px 16px 0">
+    <div class="tp" onclick="openTournModal()">
+      <div class="tp-row">
+        <span style="font-size:15px">🏆</span>
+        <span class="tp-name">${esc(S.tourn.name)}</span>
+        <span style="font-size:10px;color:var(--muted)">▾</span>
+      </div>
+      <div class="tp-bar-wrap"><div class="tp-bar" style="width:${pct}%"></div></div>
+      <div class="tp-stat">${fin} / ${tot} partite giocate · ${pct}%</div>
+    </div>
+  </div>`;
+
+  // ── Stat cards ──
+  h += `<div class="stats-grid" style="padding:10px 16px 6px">
     <div class="sc" style="border-color:rgba(255,255,255,.1)" onclick="goStatCard('all')">
       <div class="sc-icon" style="color:var(--muted)">${icoStats}</div>
       <div class="sc-val">${tot}</div>
@@ -1061,6 +1101,86 @@ function renderHome() {
       <div class="empty-txt">Vai su "Partite" per aggiungere le prime partite del torneo</div>
       <br>
       <button class="btn btn-pri" onclick="go('matches')" style="max-width:200px;margin:0 auto">Aggiungi Partite</button>
+    </div>`;
+    document.getElementById('home-body').innerHTML = h;
+    return;
+  }
+
+  // ── Prossima partita / Live ──
+  const nextPnd = [...S.matches].filter(m => m.s === 'p').sort((a, b) => {
+    const da = a.date || '9999-99-99', db = b.date || '9999-99-99';
+    return da !== db ? da.localeCompare(db) : (a.time || '').localeCompare(b.time || '');
+  })[0];
+
+  if (lv.length > 0) {
+    const m = lv[0];
+    const c1 = m.t1color || '#FFD700', c2 = m.t2color || '#3B82F6';
+    h += `<div class="sec-ttl" style="padding:14px 16px 8px;display:flex;align-items:center;gap:6px">
+      <span style="color:var(--red);animation:blink 1s infinite;font-size:8px">●</span> IN CORSO
+    </div>
+    <div class="nm-card" style="border-color:rgba(239,68,68,.4);cursor:pointer" onclick="goLive('${m.id}')">
+      <div class="nm-time" style="color:var(--red)">🔴 LIVE · ${m.time}${m.cat ? ' · ' + esc(m.cat) : ''}</div>
+      <div class="nm-teams">
+        <div class="nm-col">${jersey(c1, 36)}<span class="nm-name">${esc(m.t1)}</span></div>
+        <div class="nm-score">${m.s1}–${m.s2}</div>
+        <div class="nm-col"><span class="nm-name">${esc(m.t2)}</span>${jersey(c2, 36)}</div>
+      </div>
+      <button class="btn btn-pri" onclick="event.stopPropagation();goLive('${m.id}')">▶ Continua Live</button>
+    </div>`;
+  } else if (nextPnd) {
+    const m = nextPnd;
+    const c1 = m.t1color || '#FFD700', c2 = m.t2color || '#3B82F6';
+    const dayLabel = m.date ? fmtDate(m.date) : 'Oggi';
+    h += `<div class="sec-ttl" style="padding:14px 16px 8px">⚽ PROSSIMA PARTITA</div>
+    <div class="nm-card">
+      <div class="nm-time">${dayLabel} · ${m.time}${m.cat ? ' · ' + esc(m.cat) : ''}</div>
+      <div class="nm-teams">
+        <div class="nm-col">${jersey(c1, 36)}<span class="nm-name">${esc(m.t1)}</span></div>
+        <div class="nm-vs">VS</div>
+        <div class="nm-col"><span class="nm-name">${esc(m.t2)}</span>${jersey(c2, 36)}</div>
+      </div>
+      <button class="btn btn-pri" onclick="startMatch('${m.id}')">▶ Inizia partita</button>
+    </div>`;
+  }
+
+  // ── Ultimi risultati ──
+  const recent = S.matches.filter(m => m.s === 'f').slice(-3).reverse();
+  if (recent.length > 0) {
+    h += `<div class="sec-ttl" style="padding:14px 16px 8px">🏆 ULTIMI RISULTATI</div>
+    <div class="res-list">`;
+    recent.forEach(m => {
+      const c1 = m.t1color || '#FFD700', c2 = m.t2color || '#3B82F6';
+      const sc = m.scorers && m.scorers.length > 0
+        ? m.scorers.slice(0, 3).map(x => '⚽ ' + esc(x.n || '?')).join('  ')
+        : '';
+      h += `<div class="res-row" onclick="goLive('${m.id}')">
+        <div class="res-col">${jersey(c1, 24)}<span class="res-tname">${esc(m.t1)}</span></div>
+        <div style="text-align:center;flex-shrink:0">
+          <div class="res-score">${m.s1}–${m.s2}</div>
+          ${sc ? '<div class="res-scorers">' + sc + '</div>' : ''}
+        </div>
+        <div class="res-col">${jersey(c2, 24)}<span class="res-tname">${esc(m.t2)}</span></div>
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  // ── Capocannoniere ──
+  const scorerMap = {};
+  S.matches.filter(m => m.s === 'f' && m.scorers).forEach(m => {
+    m.scorers.forEach(sc => {
+      const key = (sc.n || '?').trim().toLowerCase();
+      if (!scorerMap[key]) scorerMap[key] = { name: sc.n || '?', goals: 0 };
+      scorerMap[key].goals++;
+    });
+  });
+  const top = Object.values(scorerMap).sort((a, b) => b.goals - a.goals)[0];
+  if (top && top.goals > 0) {
+    h += `<div class="sec-ttl" style="padding:14px 16px 8px">👑 CAPOCANNONIERE</div>
+    <div class="champ-card" onclick="go('scorers')">
+      <span style="font-size:24px">⚽</span>
+      <div class="champ-name">${esc(top.name)}</div>
+      <div class="champ-goals">${top.goals} <span style="font-size:12px;color:var(--muted);font-weight:600">gol</span></div>
     </div>`;
   }
 
