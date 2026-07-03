@@ -1069,25 +1069,25 @@ function renderHome() {
 
   // ── Stat cards ──
   h += `<div class="stats-grid" style="padding:10px 16px 6px">
-    <div class="sc" style="border-color:rgba(255,255,255,.1)" onclick="goStatCard('all')">
-      <div class="sc-icon" style="color:var(--muted)">${icoStats}</div>
-      <div class="sc-val">${tot}</div>
-      <div class="sc-lbl">Totale Partite</div>
+    <div class="sc" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.25)" onclick="goStatCard('all')">
+      <div class="sc-icon" style="color:var(--accent)">${icoStats}</div>
+      <div class="sc-val" style="color:var(--accent-light)">${tot}</div>
+      <div class="sc-lbl" style="color:rgba(74,222,128,.7)">Totale Partite</div>
     </div>
-    <div class="sc" style="border-color:rgba(34,197,94,.2)" onclick="goStatCard('fin')">
+    <div class="sc" style="background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.4)" onclick="goStatCard('fin')">
       <div class="sc-icon" style="color:var(--green)">${icoCheck}</div>
-      <div class="sc-val" style="color:var(--green)">${fin}</div>
-      <div class="sc-lbl">Terminate</div>
+      <div class="sc-val" style="color:#fff">${fin}</div>
+      <div class="sc-lbl" style="color:rgba(74,222,128,.8)">Terminate</div>
     </div>
-    <div class="sc" style="border-color:rgba(250,204,21,.25);background:rgba(250,204,21,.07)" onclick="goStatCard('live')">
+    <div class="sc" style="background:rgba(250,204,21,.13);border-color:rgba(250,204,21,.35)" onclick="goStatCard('live')">
       <div class="sc-icon" style="color:var(--yellow)">${icoClock}</div>
       <div class="sc-val" style="color:var(--yellow)">${lv.length}</div>
-      <div class="sc-lbl">In Corso</div>
+      <div class="sc-lbl" style="color:rgba(250,204,21,.75)">In Corso</div>
     </div>
-    <div class="sc" style="border-color:rgba(255,255,255,.08)" onclick="goStatCard('pnd')">
-      <div class="sc-icon" style="color:var(--muted)">${icoBall}</div>
-      <div class="sc-val" style="color:var(--muted)">${pnd}</div>
-      <div class="sc-lbl">Da Giocare</div>
+    <div class="sc" style="background:rgba(156,163,175,.09);border-color:rgba(156,163,175,.22)" onclick="goStatCard('pnd')">
+      <div class="sc-icon" style="color:#9CA3AF">${icoBall}</div>
+      <div class="sc-val" style="color:#D1D5DB">${pnd}</div>
+      <div class="sc-lbl" style="color:rgba(156,163,175,.8)">Da Giocare</div>
     </div>
   </div>`;
 
