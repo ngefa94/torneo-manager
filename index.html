@@ -293,14 +293,11 @@ body{
 .nm-name{font-size:13px;font-weight:700;text-align:center;line-height:1.2}
 .nm-vs{font-size:13px;color:var(--muted);font-weight:800;background:var(--card2);padding:6px 9px;border-radius:10px;flex-shrink:0}
 .nm-score{font-size:30px;font-weight:900;letter-spacing:-1px;flex-shrink:0}
-.res-list{background:var(--card);border:1px solid var(--border);border-radius:16px;margin:0 16px;overflow:hidden;box-shadow:var(--shadow-sm)}
-.res-row{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer}
-.res-row:last-child{border-bottom:none}
-.res-row:active{opacity:.6}
-.res-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
-.res-tname{font-size:12px;font-weight:700;text-align:center}
-.res-score{font-size:20px;font-weight:900;letter-spacing:-0.5px;flex-shrink:0;text-align:center;min-width:48px}
-.res-scorers{font-size:10.5px;color:var(--muted);text-align:center;margin-top:2px}
+.res-slist{border-top:1px solid var(--border);margin-top:10px;padding-top:10px;display:flex;flex-direction:column;gap:6px}
+.res-si{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.res-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block}
+.res-sn{flex:1}
+.res-sm{color:var(--muted);font-weight:400;font-size:11px}
 .champ-card{background:var(--card);border:1px solid rgba(250,204,21,.3);border-radius:16px;margin:0 16px 6px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);cursor:pointer}
 .champ-card:active{opacity:.7}
 .champ-name{font-size:16px;font-weight:700;flex:1}
@@ -1146,23 +1143,31 @@ function renderHome() {
   // ── Ultimi risultati ──
   const recent = S.matches.filter(m => m.s === 'f').slice(-3).reverse();
   if (recent.length > 0) {
-    h += `<div class="sec-ttl" style="padding:14px 16px 8px">🏆 ULTIMI RISULTATI</div>
-    <div class="res-list">`;
+    h += '<div class="sec-ttl" style="padding:14px 16px 8px">🏆 ULTIMI RISULTATI</div>';
     recent.forEach(m => {
       const c1 = m.t1color || '#FFD700', c2 = m.t2color || '#3B82F6';
-      const sc = m.scorers && m.scorers.length > 0
-        ? m.scorers.slice(0, 3).map(x => '⚽ ' + esc(x.n || '?')).join('  ')
-        : '';
-      h += `<div class="res-row" onclick="goLive('${m.id}')">
-        <div class="res-col">${jersey(c1, 24)}<span class="res-tname">${esc(m.t1)}</span></div>
-        <div style="text-align:center;flex-shrink:0">
-          <div class="res-score">${m.s1}–${m.s2}</div>
-          ${sc ? '<div class="res-scorers">' + sc + '</div>' : ''}
-        </div>
-        <div class="res-col">${jersey(c2, 24)}<span class="res-tname">${esc(m.t2)}</span></div>
-      </div>`;
+      let slist = '';
+      if (m.scorers && m.scorers.length > 0) {
+        slist = '<div class="res-slist">';
+        m.scorers.forEach(sc => {
+          const dot = sc.t === m.t1 ? c1 : c2;
+          slist += '<div class="res-si">'
+            + '<span class="res-dot" style="background:' + dot + '"></span>'
+            + '<span class="res-sn">' + esc(sc.n || 'Anonimo') + '</span>'
+            + (sc.min ? '<span class="res-sm">' + sc.min + "'</span>" : '')
+            + '</div>';
+        });
+        slist += '</div>';
+      }
+      h += '<div class="nm-card" style="margin-bottom:10px;cursor:pointer" onclick="goLive(\'' + m.id + '\')">'
+        + '<div class="nm-teams">'
+        + '<div class="nm-col">' + jersey(c1, 36) + '<span class="nm-name">' + esc(m.t1) + '</span></div>'
+        + '<div class="nm-score">' + m.s1 + '–' + m.s2 + '</div>'
+        + '<div class="nm-col"><span class="nm-name">' + esc(m.t2) + '</span>' + jersey(c2, 36) + '</div>'
+        + '</div>'
+        + slist
+        + '</div>';
     });
-    h += `</div>`;
   }
 
   // ── Capocannoniere ──
