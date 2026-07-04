@@ -2242,7 +2242,15 @@ function renderTournMgr() {
   all.forEach(t => {
     const finCount = t.matches.filter(m => m.s === 'f').length;
     const tot = t.totalMatches || t.matches.length;
-    const badge = t.active ? `<span style="font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:20px;white-space:nowrap">ATTIVO</span>` : `<button class="act sm pri" onclick="switchToTournament('${t.id}')" style="font-size:11px;white-space:nowrap">Usa</button>`;
+    const actions = t.active
+      ? `<span style="font-size:10px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:2px 8px;border-radius:20px;white-space:nowrap">ATTIVO</span>`
+      : `<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
+          <button class="act sm pri" onclick="switchToTournament('${t.id}')" style="font-size:11px;white-space:nowrap;width:60px">Attiva</button>
+          <div style="display:flex;gap:4px">
+            <button class="act sm" onclick="editTournamentName('${t.id}')" style="font-size:13px;padding:2px 7px" title="Rinomina">✏️</button>
+            <button class="act sm" onclick="deleteTournament('${t.id}')" style="font-size:13px;padding:2px 7px;color:#ef4444" title="Elimina">🗑️</button>
+          </div>
+        </div>`;
     h += `
     <div style="background:var(--card);border:1px solid ${t.active ? 'rgba(34,197,94,.35)' : 'var(--border)'};border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm)">
       <div style="font-size:26px">🏆</div>
@@ -2250,7 +2258,7 @@ function renderTournMgr() {
         <div style="font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.name)}</div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px">${finCount} / ${tot} partite · ${t.matches.length} create</div>
       </div>
-      ${badge}
+      ${actions}
     </div>`;
   });
 
@@ -2284,17 +2292,39 @@ function tmgrSaveActive() {
 function switchToTournament(id) {
   const idx = S.savedTournaments.findIndex(t => t.id === id);
   if (idx === -1) return;
-  const next = S.savedTournaments[idx];
-  // Save current
+  const next = { ...S.savedTournaments[idx] };
+  // Save current tournament in the slot of the one being activated
   S.savedTournaments[idx] = { id: S.tourn.id, name: S.tourn.name, halfMins: S.tourn.halfMins, totalMatches: S.tourn.totalMatches, matches: [...S.matches], liveId: S.liveId };
-  // Restore selected
-  S.tourn = { id: next.id, name: next.name, halfMins: next.halfMins, totalMatches: next.totalMatches };
+  // Activate selected
+  S.tourn = { id: next.id, name: next.name, halfMins: next.halfMins || 15, totalMatches: next.totalMatches };
   S.matches = next.matches || [];
   S.liveId = next.liveId || null;
   if (!S.tourn.id) S.tourn.id = 'T' + Date.now();
-  save(); renderSettings(); renderHome();
-  renderTournMgr();
-  toast(`🏆 Torneo: ${next.name}`);
+  save();
+  closeTournMgr();
+  go('home');
+  toast(`🏆 Torneo attivo: ${next.name}`);
+}
+
+function deleteTournament(id) {
+  const idx = S.savedTournaments.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const name = S.savedTournaments[idx].name;
+  showCo('🗑️', 'Elimina torneo', `Eliminare "${esc(name)}"?<br>Tutte le partite del torneo saranno perse.`, 'Elimina', () => {
+    S.savedTournaments.splice(idx, 1);
+    save(); closeCo(); renderTournMgr();
+    toast(`Torneo eliminato`);
+  });
+}
+
+function editTournamentName(id) {
+  const idx = S.savedTournaments.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const current = S.savedTournaments[idx].name;
+  const name = prompt('Nuovo nome:', current);
+  if (!name || !name.trim()) return;
+  S.savedTournaments[idx].name = name.trim();
+  save(); renderTournMgr();
 }
 
 function newTournament() {
@@ -2571,7 +2601,9 @@ if (new URLSearchParams(location.search).has('pub')) {
     if (d.tourn) S.tourn = d.tourn;
     if (d.matches) S.matches = d.matches;
     S.liveId = d.liveId || null;
-    localStorage.setItem('trn-v2', JSON.stringify(d));
+    if (d.savedTournaments) S.savedTournaments = d.savedTournaments;
+    S.savedTournaments.forEach(t => { if (!t.id) t.id = 'T' + Date.now() + Math.random(); });
+    localStorage.setItem('trn-v2', JSON.stringify({ tourn: S.tourn, matches: S.matches, liveId: S.liveId, savedTournaments: S.savedTournaments }));
     render(S.view);
   });
 }
