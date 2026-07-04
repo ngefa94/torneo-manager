@@ -1030,6 +1030,7 @@ function load() {
     if (d.liveId) S.liveId = d.liveId;
     if (d.savedTournaments) S.savedTournaments = d.savedTournaments;
     if (!S.tourn.id) S.tourn.id = 'T' + Date.now();
+    S.savedTournaments.forEach(t => { if (!t.id) t.id = 'T' + Date.now() + Math.random(); });
   } catch(e) {}
 }
 function save() {
@@ -2299,15 +2300,12 @@ function switchToTournament(id) {
 function newTournament() {
   const name = prompt('Nome del nuovo torneo:');
   if (!name || !name.trim()) return;
-  // Save current to saved list
-  S.savedTournaments.push({ id: S.tourn.id, name: S.tourn.name, halfMins: S.tourn.halfMins, totalMatches: S.tourn.totalMatches, matches: [...S.matches], liveId: S.liveId });
-  // Create new tournament
-  S.tourn = { id: 'T' + Date.now(), name: name.trim(), halfMins: 15, totalMatches: null };
-  S.matches = [];
-  S.liveId = null;
-  save(); renderSettings(); renderHome();
+  // Add new tournament to saved list (non attivo, premi "Usa" per attivarlo)
+  const newT = { id: 'T' + Date.now(), name: name.trim(), halfMins: 15, totalMatches: null, matches: [], liveId: null };
+  S.savedTournaments.push(newT);
+  save();
   renderTournMgr();
-  toast(`🏆 Nuovo torneo: ${name.trim()}`);
+  toast(`🏆 Torneo "${name.trim()}" aggiunto`);
 }
 
 function exportData() {
