@@ -52,7 +52,7 @@ body{
   position:fixed;top:0;
   left:max(0px,calc(50vw - 215px));
   right:max(0px,calc(50vw - 215px));
-  bottom:calc(var(--nav) + var(--safe) + 10px);
+  bottom:calc(var(--nav) + var(--safe) + 22px);
   overflow:hidden;
 }
 #pages-track{
@@ -83,7 +83,7 @@ body{
 /* ── BOTTOM NAV ── */
 .nav{
   position:fixed;
-  bottom:calc(var(--safe) + 10px);
+  bottom:calc(var(--safe) + 22px);
   left:max(20px,calc(50vw - 195px));
   right:max(20px,calc(50vw - 195px));
   height:var(--nav);
@@ -190,7 +190,7 @@ body{
 }
 .btn-ico:active{opacity:.6}
 #fab{
-  position:fixed;bottom:calc(var(--nav) + var(--safe) + 26px);
+  position:fixed;bottom:calc(var(--nav) + var(--safe) + 38px);
   right:max(16px,calc(50vw - 199px));
   width:56px;height:56px;border-radius:50%;
   background:var(--accent);border:none;color:#fff;
@@ -606,7 +606,11 @@ body{
 <div id="view-settings" style="display:none;position:fixed;inset:0;z-index:150;overflow-y:auto;background:var(--bg);padding-top:var(--top)">
   <div class="hdr">
     <div class="hdr-row">
-      <div><h1>Impostazioni</h1><p>Configura il torneo</p></div>
+      <button class="btn-ico" onclick="go('home')" title="Indietro">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </button>
+      <div><h1>Impostazioni</h1></div>
+      <div style="width:40px"></div>
     </div>
   </div>
   <div id="settings-body"></div>
