@@ -1114,10 +1114,13 @@ function renderHome() {
   }
 
   // ── Prossima partita / Live ──
-  const nextPnd = [...S.matches].filter(m => m.s === 'p').sort((a, b) => {
-    const da = a.date || '9999-99-99', db = b.date || '9999-99-99';
-    return da !== db ? da.localeCompare(db) : (a.time || '').localeCompare(b.time || '');
-  })[0];
+  const _mts = m => { try { const [hh,mm]=(m.time||'00:00').split(':').map(Number); const d=m.date?new Date(m.date+'T00:00:00'):new Date(); d.setHours(hh,mm,0,0); return d.getTime(); } catch(e){ return 0; } };
+  const _now = Date.now();
+  const _pnd = S.matches.filter(m => m.s === 'p');
+  const _fut = _pnd.filter(m => _mts(m) >= _now).sort((a,b) => _mts(a)-_mts(b));
+  const _pst = _pnd.filter(m => _mts(m) < _now).sort((a,b) => _mts(a)-_mts(b));
+  const allPnd = [..._fut, ..._pst];
+  const _cd = m => { try { const diff=_mts(m)-_now; if(diff<=0||diff>86400000) return ''; const min=Math.round(diff/60000); return min<60?`Inizia tra ${min} min`:`Inizia tra ${Math.floor(min/60)}h${min%60>0?' '+min%60+'min':''}`; } catch(e){ return ''; } };
 
   if (lv.length > 0) {
     const m = lv[0];
@@ -1134,31 +1137,18 @@ function renderHome() {
       </div>
       <button class="btn btn-pri" onclick="event.stopPropagation();goLive('${m.id}')">▶ Continua Live</button>
     </div>`;
-  } else if (nextPnd) {
-    const m = nextPnd;
-    const c1 = m.t1color || '#FFD700', c2 = m.t2color || '#3B82F6';
-    // countdown
-    let countdown = '';
-    try {
-      if (m.time) {
-        const [hh, mm] = m.time.split(':').map(Number);
-        const now = Date.now();
-        const base = m.date ? new Date(m.date + 'T00:00:00') : new Date();
-        base.setHours(hh, mm, 0, 0);
-        let matchTs = base.getTime();
-        if (!m.date && matchTs < now) matchTs += 86400000;
-        const diffMs = matchTs - now;
-        if (diffMs > 0 && diffMs < 86400000) {
-          const diffMin = Math.round(diffMs / 60000);
-          countdown = diffMin < 60 ? `Inizia tra ${diffMin} min` : `Inizia tra ${Math.floor(diffMin/60)}h${diffMin%60>0?' '+diffMin%60+'min':''}`;
-        }
-      }
-    } catch(e) {}
-    h += `<div class="sec-ttl" style="padding:14px 16px 8px">⚽ PROSSIMA PARTITA</div>
-    <div class="nm-card">
+  }
+
+  if (allPnd.length > 0) {
+    h += `<div class="sec-ttl" style="padding:14px 16px 8px">⚽ PROSSIME PARTITE</div>`;
+    // Card in evidenza: prima partita futura
+    const m = allPnd[0];
+    const c1 = m.t1color||'#FFD700', c2 = m.t2color||'#3B82F6';
+    const cd = _cd(m);
+    h += `<div class="nm-card">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px">
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
-          ${jersey(c1, 40)}
+          ${jersey(c1,40)}
           <span style="font-size:14px;font-weight:800;text-align:center;line-height:1.2">${esc(m.t1)}</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;padding:0 6px">
@@ -1166,14 +1156,25 @@ function renderHome() {
           <span style="font-size:10px;color:var(--muted);font-weight:800;letter-spacing:1.5px">VS</span>
         </div>
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
-          ${jersey(c2, 40)}
+          ${jersey(c2,40)}
           <span style="font-size:14px;font-weight:800;text-align:center;line-height:1.2">${esc(m.t2)}</span>
         </div>
       </div>
-      ${m.cat ? `<div style="text-align:center;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">${esc(m.cat)}</div>` : ''}
-      ${countdown ? `<div style="text-align:center;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:12px;padding:9px 12px;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--accent)">⏱ ${countdown}</div>` : ''}
+      ${m.cat?`<div style="text-align:center;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">${esc(m.cat)}</div>`:''}
+      ${cd?`<div style="text-align:center;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);border-radius:12px;padding:9px 12px;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--accent)">⏱ ${cd}</div>`:''}
       <button class="btn btn-pri" onclick="startMatch('${m.id}')">▶ Inizia partita</button>
     </div>`;
+    // Lista compatta per le restanti
+    allPnd.slice(1).forEach(mx => {
+      const x1=mx.t1color||'#FFD700', x2=mx.t2color||'#3B82F6';
+      h += `<div style="display:flex;align-items:center;gap:10px;margin:4px 16px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-sm)">
+        <span style="font-size:13px;font-weight:800;color:var(--muted);min-width:38px;flex-shrink:0">${mx.time}</span>
+        <div style="flex:1;display:flex;align-items:center;gap:5px">${jersey(x1,22)}<span style="font-size:13px;font-weight:700">${esc(mx.t1)}</span></div>
+        <span style="font-size:10px;color:var(--muted);font-weight:700">vs</span>
+        <div style="flex:1;display:flex;align-items:center;gap:5px;justify-content:flex-end"><span style="font-size:13px;font-weight:700">${esc(mx.t2)}</span>${jersey(x2,22)}</div>
+        ${mx.cat?`<span style="font-size:10px;color:var(--muted);background:var(--card2);padding:2px 8px;border-radius:20px;flex-shrink:0">${esc(mx.cat)}</span>`:''}
+      </div>`;
+    });
   }
 
   // ── Ultimi risultati ──
