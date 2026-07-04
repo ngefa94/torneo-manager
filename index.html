@@ -1053,13 +1053,26 @@ function renderHome() {
   const pct = tot > 0 ? Math.round(fin / tot * 100) : 0;
   let h = `<div style="padding:14px 16px 0">
     <div class="tp" onclick="openTournModal()">
-      <div class="tp-row">
-        <span style="font-size:15px">🏆</span>
-        <span class="tp-name">${esc(S.tourn.name)}</span>
-        <span style="font-size:10px;color:var(--muted)">▾</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="font-size:20px">🏆</span>
+        <span style="font-size:17px;font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(S.tourn.name)}</span>
+        <span style="font-size:11px;color:var(--muted)">▾</span>
       </div>
-      <div class="tp-bar-wrap"><div class="tp-bar" style="width:${pct}%"></div></div>
-      <div class="tp-stat">${fin} / ${tot} partite giocate · ${pct}%</div>
+      <div style="height:10px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden;margin-bottom:16px">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent-dark),var(--accent-light));border-radius:10px;transition:width .9s cubic-bezier(.4,0,.2,1)"></div>
+      </div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between">
+        <div>
+          <div style="line-height:1">
+            <span style="font-size:38px;font-weight:900;letter-spacing:-2px">${fin}</span>
+            <span style="font-size:18px;color:var(--muted);font-weight:600"> / ${tot}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.6px">partite giocate</div>
+        </div>
+        <div style="line-height:1;text-align:right">
+          <span style="font-size:44px;font-weight:900;letter-spacing:-2px;color:var(--accent)">${pct}</span><span style="font-size:22px;font-weight:700;color:var(--accent)">%</span>
+        </div>
+      </div>
     </div>
   </div>`;
 
