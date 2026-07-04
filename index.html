@@ -92,7 +92,7 @@ body{
 .nb.active{color:var(--accent);position:relative}
 .nb.active::after{content:'';position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:20px;height:2px;background:var(--accent);border-radius:2px}
 .nb svg{width:22px;height:22px}
-.nb i{font-size:23px;line-height:1;display:block}
+.nb i{font-size:22px;line-height:1;display:block}
 
 /* ── MATCH CARD ── */
 .mc{
@@ -139,7 +139,7 @@ body{
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
 /* ── BUTTONS ── */
-/* ── BUTTONS ── */
+
 .btn{
   display:flex;align-items:center;justify-content:center;gap:8px;
   padding:16px 20px;border-radius:16px;border:none;
@@ -504,7 +504,7 @@ body{
 .sc-val{font-size:34px;font-weight:900;letter-spacing:-1.5px;line-height:1}
 .sc-lbl{font-size:10px;color:var(--muted);margin-top:5px;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
 </style>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -525,7 +525,7 @@ body{
           <span style="font-size:10px;color:var(--muted);flex-shrink:0">▾</span>
         </button>
         <button class="btn-ico" onclick="go('settings')" title="Impostazioni">
-          <i class="ph-bold ph-gear-six" style="font-size:18px"></i>
+          <i class="bi bi-gear-fill" style="font-size:18px"></i>
         </button>
       </div>
     </div>
@@ -582,23 +582,23 @@ body{
 <nav class="nav">
   <div class="nav-inner">
   <button class="nb active" id="nb-home" onclick="go('home')">
-    <i class="ph-bold ph-house-simple"></i>
+    <i class="bi bi-house-fill"></i>
     Home
   </button>
   <button class="nb" id="nb-matches" onclick="go('matches')">
-    <i class="ph-bold ph-calendar-blank"></i>
+    <i class="bi bi-calendar-week-fill"></i>
     Partite
   </button>
   <button class="nb" id="nb-live" onclick="go('live')">
-    <i class="ph-bold ph-broadcast"></i>
+    <i class="bi bi-broadcast-pin"></i>
     Live
   </button>
   <button class="nb" id="nb-classifica" onclick="go('classifica')">
-    <i class="ph-bold ph-chart-bar"></i>
+    <i class="bi bi-trophy-fill"></i>
     Classifica
   </button>
   <button class="nb" id="nb-scorers" onclick="go('scorers')">
-    <i class="ph-bold ph-soccer-ball"></i>
+    <i class="bi bi-person-fill"></i>
     Marcatori
   </button>
   </div>
