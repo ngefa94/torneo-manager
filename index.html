@@ -1033,7 +1033,9 @@ function load() {
     S.savedTournaments.forEach(t => { if (!t.id) t.id = 'T' + Date.now() + Math.random(); });
   } catch(e) {}
 }
+let _localSaveTs = 0;
 function save() {
+  _localSaveTs = Date.now();
   const data = { tourn: S.tourn, matches: S.matches, liveId: S.liveId || null, savedTournaments: S.savedTournaments };
   localStorage.setItem('trn-v2', JSON.stringify(data));
   DOC.set(data).catch(() => {});
@@ -2597,6 +2599,9 @@ if (new URLSearchParams(location.search).has('pub')) {
   go('home');
   DOC.onSnapshot(snap => {
     if (!snap.exists) return;
+    // Se abbiamo appena fatto un save locale (< 3s), ignora l'echo Firebase
+    // per evitare che sovrascriva lo stato e re-renderizzi con dati sbagliati
+    if (Date.now() - _localSaveTs < 3000) return;
     const d = snap.data();
     if (d.tourn) S.tourn = d.tourn;
     if (d.matches) S.matches = d.matches;
