@@ -48,19 +48,25 @@ body{
 }
 
 /* ── VIEWS ── */
+#pages-wrap{
+  position:fixed;top:0;
+  left:max(0px,calc(50vw - 215px));
+  right:max(0px,calc(50vw - 215px));
+  bottom:calc(var(--nav) + var(--safe) + 10px);
+  overflow:hidden;
+}
+#pages-track{
+  display:flex;width:500%;height:100%;
+  will-change:transform;
+}
 .view{
-  display:none;
-  height:100dvh;overflow-y:auto;
-  padding-bottom:calc(var(--nav) + var(--safe) + 12px);
+  flex:0 0 20%;width:20%;height:100%;
+  overflow-y:auto;overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
+  padding-bottom:16px;
 }
 .view::-webkit-scrollbar{display:none}
-.view.active{display:block}
-@keyframes page-in-r{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
-@keyframes page-in-l{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:translateX(0)}}
-.view.active.dir-r{animation:page-in-r .23s cubic-bezier(.25,.46,.45,.94)}
-.view.active.dir-l{animation:page-in-l .23s cubic-bezier(.25,.46,.45,.94)}
 
 /* ── HEADER ── */
 .hdr{
@@ -76,33 +82,39 @@ body{
 
 /* ── BOTTOM NAV ── */
 .nav{
-  position:fixed;bottom:0;left:0;right:0;
-  height:calc(var(--nav) + var(--safe));
-  background:rgba(9,20,9,.98);border-top:1px solid var(--border);
-  display:flex;justify-content:center;z-index:100;
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  padding-bottom:var(--safe);
+  position:fixed;
+  bottom:calc(var(--safe) + 10px);
+  left:max(20px,calc(50vw - 195px));
+  right:max(20px,calc(50vw - 195px));
+  height:var(--nav);
+  background:rgba(14,25,17,.96);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:32px;
+  display:flex;justify-content:center;
+  z-index:100;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  box-shadow:0 8px 32px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.3);
 }
 .nav-inner{
-  display:flex;width:100%;max-width:430px;
-  position:relative;
+  display:flex;width:100%;
+  position:relative;padding:0 6px;
 }
 .nb{
   flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:3px;
-  cursor:pointer;color:var(--muted);font-size:10.5px;font-weight:600;
-  border:none;background:none;letter-spacing:.3px;
-  transition:color .25s;
+  align-items:center;justify-content:center;
+  cursor:pointer;color:var(--muted);
+  border:none;background:none;
+  transition:color .25s;position:relative;
 }
 .nb.active{color:var(--accent)}
 .nb svg{width:22px;height:22px}
 .nb i{font-size:22px;line-height:1;display:block}
 .nav-pill{
-  position:absolute;bottom:9px;
-  width:28px;height:3px;
-  background:var(--accent);border-radius:3px;
-  box-shadow:0 0 10px rgba(34,197,94,.55);
-  left:calc(10% - 14px);
+  position:absolute;bottom:7px;
+  width:5px;height:5px;border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 8px rgba(34,197,94,.7);
+  left:calc(10% - 2.5px);
   transition:left .35s cubic-bezier(.4,0,.2,1);
   pointer-events:none;
 }
@@ -178,7 +190,7 @@ body{
 }
 .btn-ico:active{opacity:.6}
 #fab{
-  position:fixed;bottom:calc(var(--nav) + var(--safe) + 16px);
+  position:fixed;bottom:calc(var(--nav) + var(--safe) + 26px);
   right:max(16px,calc(50vw - 199px));
   width:56px;height:56px;border-radius:50%;
   background:var(--accent);border:none;color:#fff;
@@ -531,7 +543,8 @@ body{
 <body>
 
 <!-- ══════════════════════ HOME ══════════════════════ -->
-<div id="view-home" class="view active">
+<div id="pages-wrap"><div id="pages-track">
+<div id="view-home" class="view">
   <div class="hdr">
     <div class="hdr-row">
       <div style="display:flex;align-items:center;gap:11px">
@@ -587,8 +600,10 @@ body{
   <div id="scorers-body"></div>
 </div>
 
+</div></div><!-- /pages-track /pages-wrap -->
+
 <!-- ══════════════════════ SETTINGS ══════════════════════ -->
-<div id="view-settings" class="view">
+<div id="view-settings" style="display:none;position:fixed;inset:0;z-index:150;overflow-y:auto;background:var(--bg);padding-top:var(--top)">
   <div class="hdr">
     <div class="hdr-row">
       <div><h1>Impostazioni</h1><p>Configura il torneo</p></div>
@@ -601,26 +616,11 @@ body{
 <nav class="nav">
   <div class="nav-inner">
   <div class="nav-pill" id="nav-pill"></div>
-  <button class="nb active" id="nb-home" onclick="go('home')">
-    <i class="bi bi-house-fill"></i>
-    Home
-  </button>
-  <button class="nb" id="nb-matches" onclick="go('matches')">
-    <i class="bi bi-calendar-week-fill"></i>
-    Partite
-  </button>
-  <button class="nb" id="nb-live" onclick="go('live')">
-    <i class="bi bi-broadcast-pin"></i>
-    Live
-  </button>
-  <button class="nb" id="nb-classifica" onclick="go('classifica')">
-    <i class="bi bi-trophy-fill"></i>
-    Classifica
-  </button>
-  <button class="nb" id="nb-scorers" onclick="go('scorers')">
-    <i class="bi bi-person-fill"></i>
-    Marcatori
-  </button>
+  <button class="nb active" id="nb-home" onclick="go('home')"><i class="bi bi-house-fill"></i></button>
+  <button class="nb" id="nb-matches" onclick="go('matches')"><i class="bi bi-calendar-week-fill"></i></button>
+  <button class="nb" id="nb-live" onclick="go('live')"><i class="bi bi-broadcast-pin"></i></button>
+  <button class="nb" id="nb-classifica" onclick="go('classifica')"><i class="bi bi-trophy-fill"></i></button>
+  <button class="nb" id="nb-scorers" onclick="go('scorers')"><i class="bi bi-person-fill"></i></button>
   </div>
 </nav>
 
@@ -1021,23 +1021,31 @@ function save() {
 // NAVIGATION
 // ════════════════════════════════════════
 const _NAV_TABS = ['home','matches','live','classifica','scorers'];
-function go(v, dir) {
-  const prevIdx = _NAV_TABS.indexOf(S.view);
-  const nextIdx = _NAV_TABS.indexOf(v);
-  const slideDir = dir || (nextIdx >= prevIdx ? 'r' : 'l');
-  document.querySelectorAll('.view').forEach(x => x.classList.remove('active','dir-r','dir-l'));
+function _pw() { return document.getElementById('pages-wrap').offsetWidth; }
+
+function go(v) {
+  const settings = document.getElementById('view-settings');
+  if (v === 'settings') {
+    settings.style.display = 'block';
+    S.view = v;
+    render(v);
+    return;
+  }
+  settings.style.display = 'none';
+
+  const idx = _NAV_TABS.indexOf(v);
+  const track = document.getElementById('pages-track');
+  track.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1)';
+  track.style.transform = `translateX(${-idx * _pw()}px)`;
+
   document.querySelectorAll('.nb').forEach(x => x.classList.remove('active'));
-  const newView = document.getElementById('view-' + v);
-  newView.classList.add('active', 'dir-' + slideDir);
-  newView.addEventListener('animationend', () => newView.classList.remove('dir-r','dir-l'), {once:true});
   const nb = document.getElementById('nb-' + v);
   if (nb) nb.classList.add('active');
-  const idx = _NAV_TABS.indexOf(v);
   const pill = document.getElementById('nav-pill');
-  if (pill && idx >= 0) pill.style.left = `calc(${idx * 20 + 10}% - 14px)`;
+  if (pill && idx >= 0) pill.style.left = `calc(${idx * 20 + 10}% - 2.5px)`;
+
   S.view = v;
-  const fab = document.getElementById('fab');
-  fab.classList.toggle('show', v === 'matches');
+  document.getElementById('fab').classList.toggle('show', v === 'matches');
   render(v);
 }
 
@@ -2347,22 +2355,57 @@ function sharePublicLink() {
 // ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
-// ── Swipe to change page ──
+// ── Drag pages ──
 {
-  let _tx = 0, _ty = 0;
-  document.addEventListener('touchstart', e => {
-    _tx = e.touches[0].clientX;
-    _ty = e.touches[0].clientY;
-  }, {passive:true});
-  document.addEventListener('touchend', e => {
-    if (document.querySelector('.mo.open')) return;
-    const dx = e.changedTouches[0].clientX - _tx;
-    const dy = e.changedTouches[0].clientY - _ty;
-    if (Math.abs(dx) < 55 || Math.abs(dy) > Math.abs(dx)) return;
-    const idx = _NAV_TABS.indexOf(S.view);
-    if (dx < 0 && idx < _NAV_TABS.length - 1) go(_NAV_TABS[idx + 1], 'r');
-    else if (dx > 0 && idx > 0) go(_NAV_TABS[idx - 1], 'l');
-  }, {passive:true});
+  let _tx=0,_ty=0,_bx=0,_dir=null,_drag=false;
+  const track=()=>document.getElementById('pages-track');
+  const wrap=()=>document.getElementById('pages-wrap');
+
+  document.addEventListener('touchstart',e=>{
+    if(document.querySelector('.mo.open')||S.view==='settings') return;
+    _tx=e.touches[0].clientX; _ty=e.touches[0].clientY;
+    _dir=null; _drag=false;
+    const t=track(); if(!t) return;
+    const m=new DOMMatrix(getComputedStyle(t).transform);
+    _bx=m.m41;
+    t.style.transition='none';
+    t.style.transform=`translateX(${_bx}px)`;
+  },{passive:true});
+
+  document.addEventListener('touchmove',e=>{
+    const t=track(); if(!t||document.querySelector('.mo.open')) return;
+    const dx=e.touches[0].clientX-_tx, dy=e.touches[0].clientY-_ty;
+    if(!_dir){
+      if(Math.abs(dx)<6&&Math.abs(dy)<6) return;
+      _dir=Math.abs(dx)>=Math.abs(dy)?'h':'v';
+    }
+    if(_dir!=='h') return;
+    _drag=true;
+    const pw=wrap().offsetWidth;
+    const maxX=0, minX=-(_NAV_TABS.length-1)*pw;
+    let nx=_bx+dx;
+    if(nx>maxX) nx=(nx-maxX)*0.22;
+    else if(nx<minX) nx=minX+(nx-minX)*0.22;
+    t.style.transform=`translateX(${nx}px)`;
+  },{passive:true});
+
+  document.addEventListener('touchend',e=>{
+    if(!_drag){_drag=false;return;}
+    _drag=false;
+    const pw=wrap().offsetWidth;
+    const dx=e.changedTouches[0].clientX-_tx;
+    const curIdx=_NAV_TABS.indexOf(S.view);
+    const snap=()=>{
+      const t=track();
+      t.style.transition='transform .3s cubic-bezier(.4,0,.2,1)';
+      t.style.transform=`translateX(${-curIdx*pw}px)`;
+    };
+    if(Math.abs(dx)>pw*0.25){
+      if(dx<0&&curIdx<_NAV_TABS.length-1) go(_NAV_TABS[curIdx+1]);
+      else if(dx>0&&curIdx>0) go(_NAV_TABS[curIdx-1]);
+      else snap();
+    } else snap();
+  },{passive:true});
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
@@ -2371,9 +2414,8 @@ load();
 
 if (new URLSearchParams(location.search).has('pub')) {
   document.querySelector('.nav').style.display = 'none';
+  document.getElementById('pages-wrap').style.bottom = '0';
   document.getElementById('fab').style.display = 'none';
-  document.body.style.paddingBottom = '0';
-  document.getElementById('view-home').classList.add('active');
   renderPublicView();
   DOC.onSnapshot(snap => {
     if (!snap.exists) return;
@@ -2383,7 +2425,7 @@ if (new URLSearchParams(location.search).has('pub')) {
     renderPublicView();
   });
 } else {
-  renderHome();
+  go('home');
   DOC.onSnapshot(snap => {
     if (!snap.exists) return;
     const d = snap.data();
