@@ -1142,12 +1142,16 @@ function renderHome() {
     let countdown = '';
     if (m.time) {
       const [hh,mm] = m.time.split(':').map(Number);
-      const matchDt = m.date ? new Date(m.date+'T00:00:00') : new Date();
-      matchDt.setHours(hh, mm, 0, 0);
       const nowDt = new Date();
-      if (!m.date && matchDt < nowDt) matchDt.setDate(matchDt.getDate()+1);
+      const matchDt = new Date(nowDt);
+      if (m.date) {
+        const [y,mo,d] = m.date.split('-').map(Number);
+        matchDt.setFullYear(y, mo-1, d);
+      }
+      matchDt.setHours(hh, mm, 0, 0);
+      if (matchDt < nowDt && !m.date) matchDt.setDate(matchDt.getDate()+1);
       const diffMs = matchDt - nowDt;
-      if (diffMs > 0) {
+      if (diffMs > 0 && diffMs < 48*3600000) {
         const diffMin = Math.floor(diffMs/60000);
         if (diffMin < 60) countdown = `Inizia tra ${diffMin} min`;
         else { const h=Math.floor(diffMin/60),rm=diffMin%60; countdown=`Inizia tra ${h}h${rm>0?' '+rm+'min':''}`; }
@@ -1891,7 +1895,7 @@ function saveMatch(e) {
     S.matches.push({ id: 'M' + Date.now(), time, date, t1, t2, cat, t1color, t2color, s1: 0, s2: 0, scorers: [], s: 'p' });
     toast('Partita aggiunta ✓');
   }
-  save(); closeMo('mo-match'); renderMatches();
+  save(); closeMo('mo-match'); renderMatches(); renderHome();
 }
 
 function moveMatch(id, dir) {
