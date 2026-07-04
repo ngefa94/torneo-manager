@@ -57,6 +57,10 @@ body{
 }
 .view::-webkit-scrollbar{display:none}
 .view.active{display:block}
+@keyframes page-in-r{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+@keyframes page-in-l{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:translateX(0)}}
+.view.active.dir-r{animation:page-in-r .23s cubic-bezier(.25,.46,.45,.94)}
+.view.active.dir-l{animation:page-in-l .23s cubic-bezier(.25,.46,.45,.94)}
 
 /* ── HEADER ── */
 .hdr{
@@ -1017,10 +1021,15 @@ function save() {
 // NAVIGATION
 // ════════════════════════════════════════
 const _NAV_TABS = ['home','matches','live','classifica','scorers'];
-function go(v) {
-  document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+function go(v, dir) {
+  const prevIdx = _NAV_TABS.indexOf(S.view);
+  const nextIdx = _NAV_TABS.indexOf(v);
+  const slideDir = dir || (nextIdx >= prevIdx ? 'r' : 'l');
+  document.querySelectorAll('.view').forEach(x => x.classList.remove('active','dir-r','dir-l'));
   document.querySelectorAll('.nb').forEach(x => x.classList.remove('active'));
-  document.getElementById('view-' + v).classList.add('active');
+  const newView = document.getElementById('view-' + v);
+  newView.classList.add('active', 'dir-' + slideDir);
+  newView.addEventListener('animationend', () => newView.classList.remove('dir-r','dir-l'), {once:true});
   const nb = document.getElementById('nb-' + v);
   if (nb) nb.classList.add('active');
   const idx = _NAV_TABS.indexOf(v);
@@ -2125,7 +2134,7 @@ function quickGoal(id, idx) {
   if (sc.t === m.t1) m.s1++;
   else m.s2++;
   playGoalSound();
-  save(); renderLive();
+  save(); renderLive(); setTimeout(animScorePop, 60);
   toast(`⚽ Gol! ${sc.n || 'Anonimo'} (${sc.t})`);
 }
 
@@ -2338,6 +2347,24 @@ function sharePublicLink() {
 // ════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════
+// ── Swipe to change page ──
+{
+  let _tx = 0, _ty = 0;
+  document.addEventListener('touchstart', e => {
+    _tx = e.touches[0].clientX;
+    _ty = e.touches[0].clientY;
+  }, {passive:true});
+  document.addEventListener('touchend', e => {
+    if (document.querySelector('.mo.open')) return;
+    const dx = e.changedTouches[0].clientX - _tx;
+    const dy = e.changedTouches[0].clientY - _ty;
+    if (Math.abs(dx) < 55 || Math.abs(dy) > Math.abs(dx)) return;
+    const idx = _NAV_TABS.indexOf(S.view);
+    if (dx < 0 && idx < _NAV_TABS.length - 1) go(_NAV_TABS[idx + 1], 'r');
+    else if (dx > 0 && idx > 0) go(_NAV_TABS[idx - 1], 'l');
+  }, {passive:true});
+}
+
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
 load();
