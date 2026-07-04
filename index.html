@@ -1178,32 +1178,38 @@ function renderHome() {
   }
 
   // ── Ultimi risultati ──
-  const recent = S.matches.filter(m => m.s === 'f').slice(-3).reverse();
+  const recent = S.matches.filter(m => m.s === 'f').slice(-5).reverse();
   if (recent.length > 0) {
     h += '<div class="sec-ttl" style="padding:14px 16px 8px">🏆 ULTIMI RISULTATI</div>';
     recent.forEach(m => {
-      const c1 = m.t1color || '#FFD700', c2 = m.t2color || '#3B82F6';
-      let slist = '';
-      if (m.scorers && m.scorers.length > 0) {
-        slist = '<div class="res-slist">';
-        m.scorers.forEach(sc => {
-          const dot = sc.t === m.t1 ? c1 : c2;
-          slist += '<div class="res-si">'
-            + '<span class="res-dot" style="background:' + dot + '"></span>'
-            + '<span class="res-sn">' + esc(sc.n || 'Anonimo') + '</span>'
-            + (sc.min ? '<span class="res-sm">' + sc.min + "'</span>" : '')
-            + '</div>';
+      const c1 = m.t1color||'#FFD700', c2 = m.t2color||'#3B82F6';
+      const scorers = m.scorers || [];
+      const shown = scorers.slice(0, 3);
+      const extra = scorers.length - 3;
+      let scorerHtml = '';
+      if (shown.length > 0) {
+        scorerHtml = '<div style="border-top:1px solid var(--border);padding:7px 14px 8px;display:flex;flex-direction:column;gap:4px">';
+        shown.forEach(sc => {
+          scorerHtml += `<div style="display:flex;align-items:center;gap:6px;font-size:12px">
+            <span style="color:var(--accent);font-size:11px">⚽</span>
+            <span style="font-weight:600;flex:1;color:var(--text)">${esc(sc.n||'Anonimo')}</span>
+            ${sc.min?`<span style="color:var(--muted);font-size:11px">${sc.min}'</span>`:''}
+          </div>`;
         });
-        slist += '</div>';
+        if (extra > 0) scorerHtml += `<div style="font-size:11px;color:var(--muted);font-weight:600;padding-top:1px">+${extra} altri</div>`;
+        scorerHtml += '</div>';
       }
-      h += '<div class="nm-card" style="margin-bottom:10px;cursor:pointer" onclick="goLive(\'' + m.id + '\')">'
-        + '<div class="nm-teams">'
-        + '<div class="nm-col">' + jersey(c1, 36) + '<span class="nm-name">' + esc(m.t1) + '</span></div>'
-        + '<div class="nm-score">' + m.s1 + '–' + m.s2 + '</div>'
-        + '<div class="nm-col"><span class="nm-name">' + esc(m.t2) + '</span>' + jersey(c2, 36) + '</div>'
-        + '</div>'
-        + slist
-        + '</div>';
+      h += `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;margin:4px 16px;overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer" onclick="goLive('${m.id}')">
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 14px">
+          <div style="flex:1;display:flex;align-items:center;gap:7px">${jersey(c1,26)}<span style="font-size:13px;font-weight:700">${esc(m.t1)}</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+            <span style="font-size:22px;font-weight:900;letter-spacing:-1px;line-height:1">${m.s1} – ${m.s2}</span>
+            <span style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:2px">Finale</span>
+          </div>
+          <div style="flex:1;display:flex;align-items:center;gap:7px;justify-content:flex-end"><span style="font-size:13px;font-weight:700">${esc(m.t2)}</span>${jersey(c2,26)}</div>
+        </div>
+        ${scorerHtml}
+      </div>`;
     });
   }
 
