@@ -146,6 +146,9 @@ body{
 .sb-l::before{content:'';width:5px;height:5px;background:var(--red);border-radius:50%;animation:blink 1s infinite}
 .sb-f{background:var(--green-dim);color:var(--green)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes pop{0%{transform:scale(1.4)}65%{transform:scale(.96)}100%{transform:scale(1)}}
+@keyframes live-pulse{0%,100%{box-shadow:0 8px 25px rgba(0,0,0,.35),0 0 0 0 rgba(239,68,68,0)}60%{box-shadow:0 8px 25px rgba(0,0,0,.35),0 0 0 7px rgba(239,68,68,.1)}}
+.nm-card-live{animation:live-pulse 2.4s ease-in-out infinite}
 
 /* ── BUTTONS ── */
 
@@ -155,8 +158,9 @@ body{
   font-size:15px;font-weight:700;letter-spacing:.3px;cursor:pointer;font-family:inherit;
   transition:opacity .15s,transform .1s;width:100%;
 }
-.btn:active{opacity:.75;transform:scale(.97)}
+.btn:active{opacity:.8;transform:scale(.96)}
 .btn-pri{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;box-shadow:var(--shadow-md)}
+.btn-pri:active{transform:scale(.91);box-shadow:0 2px 8px rgba(34,197,94,.2);transition:transform .07s ease-out,box-shadow .07s}
 .btn-sec{background:var(--card2);color:var(--text);border:1px solid var(--border)}
 .btn-dnr{background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim)}
 .btn-ico{
@@ -243,7 +247,6 @@ body{
 }
 .live-snum{font-size:66px;font-weight:900;line-height:1;letter-spacing:-4px}
 .live-snum.anim{animation:pop .2s ease-out}
-@keyframes pop{0%{transform:scale(1.3)}100%{transform:scale(1)}}
 .live-sc{display:flex;flex-direction:column;gap:7px;margin-top:10px}
 .scbtn{
   padding:11px;border-radius:10px;border:1px solid var(--border);
@@ -1076,7 +1079,7 @@ function renderHome() {
         <span style="font-size:11px;color:var(--muted)">▾</span>
       </div>
       <div style="height:10px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden;margin-bottom:16px">
-        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent-dark),var(--accent-light));border-radius:10px;transition:width .9s cubic-bezier(.4,0,.2,1)"></div>
+        <div id="tourn-prog" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent-dark),var(--accent-light));border-radius:10px;transition:width .8s cubic-bezier(.4,0,.2,1)"></div>
       </div>
       <div style="display:flex;align-items:flex-end;justify-content:space-between">
         <div>
@@ -1144,7 +1147,7 @@ function renderHome() {
     h += `<div class="sec-ttl" style="padding:14px 16px 8px;display:flex;align-items:center;gap:6px">
       <span style="color:var(--red);animation:blink 1s infinite;font-size:8px">●</span> IN CORSO
     </div>
-    <div class="nm-card" style="border-color:rgba(239,68,68,.4);cursor:pointer" onclick="goLive('${m.id}')">
+    <div class="nm-card nm-card-live" style="border-color:rgba(239,68,68,.4);cursor:pointer" onclick="goLive('${m.id}')">
       <div class="nm-time" style="color:var(--red)">🔴 LIVE · ${m.time}${m.cat ? ' · ' + esc(m.cat) : ''}</div>
       <div class="nm-teams">
         <div class="nm-col">${jersey(c1, 36)}<span class="nm-name">${esc(m.t1)}</span></div>
@@ -1249,6 +1252,10 @@ function renderHome() {
   }
 
   document.getElementById('home-body').innerHTML = h;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const bar = document.getElementById('tourn-prog');
+    if (bar) bar.style.width = pct + '%';
+  }));
 }
 
 function matchCardInner(m) {
@@ -1971,6 +1978,7 @@ function chg(id, team, delta) {
   if (team === 1) m.s1 = Math.max(0, m.s1 + delta);
   else            m.s2 = Math.max(0, m.s2 + delta);
   save(); renderLive();
+  if (delta > 0) animScorePop();
 }
 
 function scoreGoal(id, team) {
@@ -2047,6 +2055,14 @@ function pickTeam(t) {
   if (m) renderScorerTeams(m);
 }
 
+function animScorePop() {
+  const el = document.getElementById('snum1');
+  if (!el) return;
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'pop .35s cubic-bezier(.18,.89,.32,1.28)';
+}
+
 function confirmScorer() {
   if (!S.scorerTeam) { toast('⚠️ Seleziona la squadra'); return; }
   const name = document.getElementById('scorer-inp').value.trim();
@@ -2058,7 +2074,7 @@ function confirmScorer() {
   if (S.scorerTeam === m.t1) m.s1++;
   else m.s2++;
   playGoalSound();
-  save(); closeMo('mo-scorer'); renderLive();
+  save(); closeMo('mo-scorer'); renderLive(); animScorePop();
   toast(`⚽ Gol! ${name || 'Anonimo'} (${S.scorerTeam})`);
 }
 
