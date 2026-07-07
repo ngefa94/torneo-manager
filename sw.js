@@ -1,4 +1,4 @@
-const CACHE = 'refly-v11';
+const CACHE = 'refly-v12';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e =>
