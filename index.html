@@ -1471,6 +1471,8 @@ function renderLive() {
   const c1 = m.t1color||'#FFD700', c2 = m.t2color||'#3B82F6';
   const winner = m.s === 'f' ? (m.s1 > m.s2 ? m.t1 : m.s2 > m.s1 ? m.t2 : null) : null;
   const isLive = m.s === 'l';
+  if (m.s !== 'f') _editMode = false;
+  const isEditable = isLive || _editMode;
 
   if (isLive && !m.halfBreak && !m.pausedAt) startTimerTick();
 
@@ -1524,7 +1526,7 @@ function renderLive() {
   }
 
   // GOAL buttons (side by side) — hidden during half-break
-  if (isLive && !m.halfBreak) {
+  if (isEditable && !m.halfBreak) {
     const isPaused = !!m.pausedAt;
     h += `<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 20px 4px;gap:10px">
       <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
@@ -1534,7 +1536,7 @@ function renderLive() {
         </button>
         <button class="goal-btn-min" onclick="chg('${m.id}',1,-1)">－</button>
       </div>
-      <button class="pause-btn" style="width:44px;height:44px;font-size:18px" onclick="pauseTimer('${m.id}')">${isPaused ? '&#9654;' : '&#9646;&#9646;'}</button>
+      ${isLive ? `<button class="pause-btn" style="width:44px;height:44px;font-size:18px" onclick="pauseTimer('${m.id}')">${isPaused ? '&#9654;' : '&#9646;&#9646;'}</button>` : '<div style="width:44px"></div>'}
       <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
         <button class="goal-btn" style="background:${c2};color:${needsDark(c2)?'#111':'#fff'}" onclick="scoreGoal('${m.id}',2)">
           <span style="font-size:26px;font-weight:900;line-height:1">+</span>
@@ -1546,7 +1548,7 @@ function renderLive() {
   }
 
   // UNDO
-  if (isLive && m.scorers && m.scorers.length > 0) {
+  if (isEditable && m.scorers && m.scorers.length > 0) {
     h += `<div class="undo-row">
       <button class="undo-btn" onclick="undoLastGoal('${m.id}')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
@@ -1556,7 +1558,7 @@ function renderLive() {
   }
 
   // CARD buttons
-  if (isLive && !m.halfBreak) {
+  if (isEditable && !m.halfBreak) {
     h += `<div class="card-row">
       <div style="display:flex;gap:6px">
         <button class="card-btn" style="background:#F59E0B;color:#111" onclick="showCardModal('${m.id}','${escAttr(m.t1)}','Y')">
@@ -1592,7 +1594,10 @@ function renderLive() {
       <button class="btn btn-dnr" style="font-size:16px;font-weight:800" onclick="finishMatch('${m.id}')">FINE PARTITA</button>
     </div>`;
   } else {
-    h += `<div style="padding:6px 14px 14px">
+    h += `<div style="padding:6px 14px 14px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn" style="background:${_editMode ? 'var(--accent)' : 'var(--card)'};color:${_editMode ? '#fff' : 'var(--fg)'};border:1px solid ${_editMode ? 'var(--accent)' : 'var(--border)'};font-size:14px;font-weight:700" onclick="toggleEditMode()">
+        ${_editMode ? '✓ Chiudi modifiche' : '✏️ Modifica partita'}
+      </button>
       <button class="btn btn-sec" onclick="resetMatch('${m.id}')">↺ Reset partita</button>
     </div>`;
   }
@@ -1614,8 +1619,8 @@ function renderLive() {
           <div class="scorer-team">${esc(sc.t)}</div>
         </div>
         <div style="width:10px;height:10px;border-radius:50%;background:${dot};flex-shrink:0"></div>
-        ${isLive ? `<button class="scorer-add" onclick="quickGoal('${m.id}',${si})">+</button>` : ''}
-        ${isLive ? `<button class="scorer-del" onclick="rmScorer('${m.id}',${si})">×</button>` : ''}
+        ${isEditable ? `<button class="scorer-add" onclick="quickGoal('${m.id}',${si})">+</button>` : ''}
+        ${isEditable ? `<button class="scorer-del" onclick="rmScorer('${m.id}',${si})">×</button>` : ''}
       </div>`;
     });
     h += `</div>`;
@@ -1638,7 +1643,7 @@ function renderLive() {
           <div class="scorer-team">${esc(c.t)}</div>
         </div>
         <div style="width:10px;height:10px;border-radius:50%;background:${dot};flex-shrink:0"></div>
-        ${isLive ? `<button class="scorer-del" onclick="rmCard('${m.id}',${ci})">×</button>` : ''}
+        ${isEditable ? `<button class="scorer-del" onclick="rmCard('${m.id}',${ci})">×</button>` : ''}
       </div>`;
     });
     h += `</div>`;
@@ -2018,9 +2023,12 @@ function backLive() {
   S.liveId = null; stopTimerTick(); releaseWakeLock(); render('live');
 }
 
+let _editMode = false;
+function toggleEditMode() { _editMode = !_editMode; renderLive(); }
+
 function chg(id, team, delta) {
   const m = S.matches.find(x => x.id === id);
-  if (!m || m.s !== 'l') return;
+  if (!m || (m.s !== 'l' && !_editMode)) return;
   if (team === 1) m.s1 = Math.max(0, m.s1 + delta);
   else            m.s2 = Math.max(0, m.s2 + delta);
   save(); renderLive();
@@ -2029,11 +2037,11 @@ function chg(id, team, delta) {
 
 function scoreGoal(id, team) {
   const m = S.matches.find(x => x.id === id);
-  if (!m || m.s !== 'l') return;
+  if (!m || (m.s !== 'l' && !_editMode)) return;
   S.scorerMatchId = id;
   S.scorerTeam = team === 1 ? m.t1 : m.t2;
   document.getElementById('scorer-inp').value = '';
-  document.getElementById('scorer-min').value = m.startedAt ? String(Math.floor(getMatchSecs(m)/60)+1) : '';
+  document.getElementById('scorer-min').value = (m.s === 'l' && m.startedAt) ? String(Math.floor(getMatchSecs(m)/60)+1) : '';
   renderScorerTeams(m);
   openMo('mo-scorer');
   setTimeout(() => document.getElementById('scorer-inp').focus(), 320);
@@ -2161,9 +2169,9 @@ function rmCard(id, idx) {
 
 function quickGoal(id, idx) {
   const m = S.matches.find(x => x.id === id);
-  if (!m || m.s !== 'l') return;
+  if (!m || (m.s !== 'l' && !_editMode)) return;
   const sc = m.scorers[idx];
-  const min = m.startedAt ? Math.floor(getMatchSecs(m)/60)+1 : null;
+  const min = (m.s === 'l' && m.startedAt) ? Math.floor(getMatchSecs(m)/60)+1 : null;
   m.scorers.push({ n: sc.n, t: sc.t, min });
   if (sc.t === m.t1) m.s1++;
   else m.s2++;
