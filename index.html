@@ -1414,9 +1414,10 @@ function fullCard(m, i) {
   let liveBtn = '';
   if (m.s === 'p')      liveBtn = `<button class="act pri" onclick="startMatch('${m.id}')">▶ Inizia</button>`;
   else if (m.s === 'l') liveBtn = `<button class="act pri" style="background:var(--red);border-color:var(--red)" onclick="goLive('${m.id}')">🔴 Live</button>`;
-  else                  liveBtn = `<button class="act" onclick="resetMatch('${m.id}')">↺ Reset</button>`;
+  else                  liveBtn = `<button class="act pri" onclick="goLive('${m.id}')">✏️ Modifica</button>`;
+  const cardClick = m.s === 'f' ? `onclick="goLive('${m.id}')" style="cursor:pointer"` : '';
   return `<div class="mc2" id="mc-${m.id}">
-    ${matchCardInner(m)}
+    <div ${cardClick}>${matchCardInner(m)}</div>
     <div class="mc2-actions">
       <button class="act sm" onclick="moveMatch('${m.id}',-1)" ${first?'disabled':''}>↑</button>
       <button class="act sm" onclick="moveMatch('${m.id}',1)" ${last?'disabled':''}>↓</button>
